@@ -307,9 +307,6 @@ Die Datenbank hat 4 Tabellen:
 4. Lass Claude eine komplexe Abfrage mit mehreren Tabellen erstellen
 5. Experimentiere mit Aggregationen (Durchschnitt, Anzahl, etc.)
 
-6. <img width="2576" height="1409" alt="image" src="https://github.com/user-attachments/assets/2994d0b3-130e-418f-b731-8c9572722541" />
-
-
 Viel Erfolg! 🚀
 
 
