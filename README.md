@@ -151,7 +151,7 @@ Die Datenbank `schule.db` enthält vier Tabellen:
 Öffne PowerShell im Projektordner **mit Admin-Rechten** und führe aus:
 ```powershell
 git clone https://github.com/FlowTheTensor/SQLite-per-MCP
-cd SQLite-mit-MCP
+cd SQLite-per-MCP
 ```
 
 ### 1. Virtuelle Umgebung erstellen (empfohlen)
