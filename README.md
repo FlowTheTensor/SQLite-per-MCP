@@ -202,6 +202,7 @@ for row in rows:
 conn.close()
 ```
 
+Wichtig ist, dass die Verbindung per ```conn.close()``` wieder geschlossen wird, da sonst die Datenbank blockiert wird und das LLM per MCP nicht darauf zugreifen kann (Timeout).
 
 ### 4. In Claude Desktop einbinden
 
@@ -220,8 +221,23 @@ Das Script zeigt dir die Konfiguration an und speichert sie in `claude_desktop_c
 - Dort `Einstellungen`
 - Unter `Entwickler` auf `Config bearbeiten`
 - Öffne die Datei `claude_desktop_config.json` mit einem Texteditor
-- Kopiere den Inhalt aus der generierten `claude_desktop_config.json` hinein
+- Kopiere den Inhalt aus der generierten `claude_desktop_config.json` in die geschweiften Klammern nach ```"mcpServers": ``` hinein
 ---
+
+Zum Beispiel so:
+```
+{
+  "mcpServers": {
+    "sqlite-schule": {
+      "command": "C:\\SQLite per MCP\\venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\SQLite per MCP\\src\\index.py"
+      ]
+    }
+  },
+  "coworkUserFilesPath": "C:\\Claude",
+  "preferences": {...
+```
 
 **Wichtig:** Claude Desktop benötigt **absolute Pfade** - relative Pfade funktionieren nicht!
 
