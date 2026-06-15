@@ -150,7 +150,7 @@ Die Datenbank `schule.db` enthält vier Tabellen:
 ### 0. Git-Repo Clonen
 Öffne PowerShell im Projektordner **mit Admin-Rechten** und führe aus:
 ```powershell
-git clone https://github.com/FlowTheTensor/SQLite-mit-MCP.git
+git clone https://github.com/FlowTheTensor/SQLite-per-MCP
 cd SQLite-mit-MCP
 ```
 
