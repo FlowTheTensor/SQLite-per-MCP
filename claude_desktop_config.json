@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "sqlite-schule": {
+      "command": "C:\\Users\\TABLEERER\\OneDrive - Jakob-Preh-Schule\\Fortbildungen\\Fachgruppe KI\\2025-11-24 A\u00d6\\SQLite per MCP\\venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\Users\\TABLEERER\\OneDrive - Jakob-Preh-Schule\\Fortbildungen\\Fachgruppe KI\\2025-11-24 A\u00d6\\SQLite per MCP\\src\\index.py"
+      ]
+    }
+  }
+}

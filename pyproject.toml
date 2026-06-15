@@ -1,0 +1,19 @@
+[project]
+name = "sqlite-mcp-server"
+version = "1.0.0"
+description = "MCP Server für SQLite-Datenbankabfragen"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0" }
+keywords = ["mcp", "sqlite", "database"]
+
+dependencies = [
+    "fastmcp"
+]
+
+[project.scripts]
+sqlite-mcp-server = "src.index:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
