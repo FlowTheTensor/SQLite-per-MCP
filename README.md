@@ -50,7 +50,6 @@ participant LLM as LLM <br>(z.B. Sonnet 4.5)
    Client->>LLM: Anfrage + Toolliste
    LLM->>LLM: wählt Tool aus
    LLM->>Client: tool Name
-   Client->>Server: tool call
     Note over Client,Server: Aufruf per stdio
     Client->>Server: tools/call
     Note over Server,App: Aufruf z.B. per REST API
@@ -58,6 +57,7 @@ participant LLM as LLM <br>(z.B. Sonnet 4.5)
     App-->>Server: z.B. HTTP RESPONSE
     Server-->>Client: Tool result als JSON RPC
     Client-->>LLM: JSON RPC
+    LLM->>LLM: Baut sein Ergebnis zusammen
     LLM->>Client: für Menschen aufbereitetes Ergebnis
     Client-->>User: für Menschen <br>aufbereitetes Ergebnis
    
