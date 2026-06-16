@@ -44,18 +44,22 @@ participant LLM as LLM <br>(z.B. Sonnet 4.5)
     participant Client as Client<br> (z.B. Claude Desktop)
     participant Server as Server
     participant App as Programm <br>(z.B. Datenbank)
-
-   User->>LLM: Anfrage in <br>natürlicher Sprache
-   LLM->>LLM: wählt tool anhand Kommentar aus
-   LLM->>Client: tool Name??
+   Client-->>Server: tool/list
+   Server->>Client: Liste der Tools
+   User->>Client: Anfrage in <br>natürlicher Sprache
+   Client->>LLM: Anfrage + Toolliste
+   LLM->>LLM: wählt Tool aus
+   LLM->>Client: tool Name
+   Client->>Server: tool call
     Note over Client,Server: Aufruf per stdio
     Client->>Server: tools/call
-    Note over Server,App: Aufruf per REST API
-    Server->>App: HTTP GET
-    App-->>Server: HTTP RESPONSE
+    Note over Server,App: Aufruf z.B. per REST API
+    Server->>App: z.B. HTTP GET
+    App-->>Server: z.B. HTTP RESPONSE
     Server-->>Client: Tool result als JSON RPC
-    Client-->>LLM: ??
-    LLM-->>User: für Menschen <br>aufbereitetes Ergebnis
+    Client-->>LLM: JSON RPC
+    LLM->>Client: für Menschen aufbereitetes Ergebnis
+    Client-->>User: für Menschen <br>aufbereitetes Ergebnis
    
 ```
 
