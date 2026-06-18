@@ -47,8 +47,6 @@ participant LLM as LLM <br>(z.B. Sonnet 4.5)
    Client-->>Server: tool/list
    Server->>Client: Liste der Tools
    User->>Client: Anfrage in <br>natürlicher Sprache
-    style User stroke:#333,stroke-width:4px
-    linkStyle 0 stroke-width:8px
    Client->>LLM: Anfrage + Toolliste
    LLM->>LLM: wählt Tool aus
    LLM->>Client: tool Name
@@ -61,10 +59,7 @@ participant LLM as LLM <br>(z.B. Sonnet 4.5)
     Client-->>LLM: JSON RPC
     LLM->>LLM: Baut sein Ergebnis zusammen
     LLM->>Client: für Menschen aufbereitetes Ergebnis
-    Client-->>User: für Menschen <br>aufbereitetes Ergebnis
-    style Client stroke:#333,stroke-width:4px
-    linkStyle 0 stroke-width:8px
-   
+    Client-->>User: für Menschen <br>aufbereitetes Ergebnis   
 ```
 
 Antworten des Servers werden per JSON RPC als Tool Result übertragen.
