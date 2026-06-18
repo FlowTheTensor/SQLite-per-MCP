@@ -46,7 +46,7 @@ participant LLM as LLM <br>(z.B. Sonnet 4.5)
     participant App as Programm <br>(z.B. Datenbank)
    Client-->>Server: tool/list
    Server->>Client: Liste der Tools
-   User->>Client: Anfrage in <br>natürlicher Sprache
+   User=>>Client: Anfrage in <br>natürlicher Sprache
    Client->>LLM: Anfrage + Toolliste
    LLM->>LLM: wählt Tool aus
    LLM->>Client: tool Name
@@ -59,7 +59,7 @@ participant LLM as LLM <br>(z.B. Sonnet 4.5)
     Client-->>LLM: JSON RPC
     LLM->>LLM: Baut sein Ergebnis zusammen
     LLM->>Client: für Menschen aufbereitetes Ergebnis
-    Client-->>User: für Menschen <br>aufbereitetes Ergebnis
+    Client==>>User: für Menschen <br>aufbereitetes Ergebnis
    
 ```
 
