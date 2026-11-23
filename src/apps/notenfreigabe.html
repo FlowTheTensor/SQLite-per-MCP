@@ -40,22 +40,47 @@
   </div>
 
 <script type="module">
+  /* ================================================================
+     MCP-App "Notenfreigabe": Human-in-the-Loop direkt im Chat
+
+     Ablauf (die Tools stehen in src/index.py):
+
+       (1) Das LLM ruft note_vorschlagen auf.
+           Dieses Tool LIEST nur: Es sucht passende Schüler und den Kurs heraus.
+           Der Host zeigt diese Seite an und gibt ihr das Ergebnis
+           → app.ontoolresult
+
+       (2) Der MENSCH prüft den Vorschlag (Namen statt ids!) und klickt.
+           Erst "Ja, eintragen" ruft note_freigeben auf. Dieses Tool SCHREIBT.
+           → app.callServerTool
+
+       (3) Das LLM erfährt still, wie der Mensch entschieden hat.
+           → app.updateModelContext
+
+     Das LLM kann note_freigeben nicht selbst aufrufen: Das Tool ist in
+     src/index.py mit visibility=["app"] markiert, und der Host versteckt es
+     vor dem LLM.
+     ================================================================ */
+
   import { App } from "https://cdn.jsdelivr.net/npm/@modelcontextprotocol/ext-apps@2.0.4/dist/src/app-with-deps.js";
 
   const app = new App({ name: "Notenfreigabe", version: "1.0.0" }, {});
-  let vorschlag = null;
+  let vorschlag = null;   // das Ergebnis von note_vorschlagen, gebraucht beim Klick auf "Ja"
 
+  // Ergebnis von note_vorschlagen als Objekt: { klasse, fach, note, art, kandidaten: [...] }
   function datenAus(ergebnis) {
     return ergebnis.structuredContent ?? JSON.parse(ergebnis.content[0].text);
   }
 
+  // Neues HTML-Element mit Text. textContent statt innerHTML, damit Namen
+  // aus der Datenbank nie als HTML-Code ausgeführt werden.
   function element(tag, text) {
     const e = document.createElement(tag);
     if (text !== undefined) e.textContent = text;
     return e;
   }
 
-  // Dem LLM still mitteilen, wie der Mensch entschieden hat.
+  // (3) Dem LLM still mitteilen, wie der Mensch entschieden hat.
   async function demLlmMitteilen(text) {
     try {
       await app.updateModelContext({ content: [{ type: "text", text }] });
@@ -63,6 +88,7 @@
   }
 
   // ---------- Vorschlag anzeigen ----------
+  // Je nach Anzahl der Treffer: Fehlermeldung, Ja/Nein-Frage oder Auswahlliste
 
   function anzeigen(daten) {
     vorschlag = daten;
@@ -106,13 +132,14 @@
     return radio ? vorschlag.kandidaten[Number(radio.value)] : null;
   }
 
+  // Knöpfe sperren, damit dieselbe Note nicht zweimal eingetragen wird
   function fertig(text) {
     document.getElementById("ja").disabled = true;
     document.getElementById("nein").disabled = true;
     document.getElementById("ergebnis").textContent = text;
   }
 
-  // ---------- Entscheidung des Menschen ----------
+  // ---------- (2) Entscheidung des Menschen ----------
 
   document.getElementById("ja").addEventListener("click", async () => {
     const k = gewaehlterKandidat();
@@ -123,6 +150,7 @@
       name: "note_freigeben",
       arguments: { schueler_id: k.schueler_id, kurs_id: k.kurs_id, note: vorschlag.note, art: vorschlag.art },
     });
+    // note_freigeben gibt Text zurück: "OK: ..." oder "Fehler: ..." (siehe note_in_datenbank_schreiben)
     const text = ergebnis.content[0].text;
     fertig(text.startsWith("OK") ? `✅ ${text}` : `⚠️ ${text}`);
     await demLlmMitteilen(`Der Mensch hat die Note freigegeben. Ergebnis: ${text}`);
@@ -135,13 +163,16 @@
 
   // ---------- Verbindung zum Host ----------
 
+  // (1) Das LLM hat note_vorschlagen aufgerufen → der Host schickt uns das Ergebnis.
   app.ontoolresult = (ergebnis) => anzeigen(datenAus(ergebnis));
 
+  // Helles oder dunkles Design vom Host übernehmen
   function designUebernehmen(kontext) {
     if (kontext?.theme) document.documentElement.dataset.theme = kontext.theme;
   }
   app.onhostcontextchanged = designUebernehmen;
 
+  // Erst verbinden, wenn alle Reaktionen festgelegt sind
   await app.connect();
   designUebernehmen(app.getHostContext());
 </script>

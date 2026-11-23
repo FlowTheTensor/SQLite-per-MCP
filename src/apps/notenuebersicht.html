@@ -57,15 +57,39 @@
   </table>
 
 <script type="module">
-  // Die Bibliothek für die Verbindung zum Host (Claude Desktop, ...).
-  // Die Adresse muss im Server unter "csp" erlaubt sein!
+  /* ================================================================
+     MCP-App "Notenübersicht"
+
+     Woher kommt diese Seite?
+       src/index.py bietet sie als Ressource ui://schule/notenuebersicht.html an.
+       Ruft das LLM das Tool notenuebersicht auf, holt der Host (Claude Desktop)
+       diese Seite und zeigt sie abgeschottet (iframe) im Chat an.
+
+     Mit wem spricht diese Seite?
+       NUR mit dem Host, über Nachrichten (postMessage, Format JSON-RPC).
+       Der Host leitet Tool-Aufrufe an den MCP-Server weiter.
+
+         LLM ──► Host ──► MCP-Server        (1) Das LLM ruft das Tool auf
+                  │
+                  ▼
+           diese Seite   ◄── Ergebnis        app.ontoolresult
+                  │
+           Mensch klickt ──► Host ──► MCP-Server
+                                            (2) app.callServerTool – ohne LLM!
+                  │
+                  └──► Host ──► LLM         (3) app.updateModelContext
+     ================================================================ */
+
+  // Die Bibliothek für die Verbindung zum Host. Ihre Adresse muss in
+  // src/index.py unter APP_SICHERHEIT (CSP) erlaubt sein!
   import { App } from "https://cdn.jsdelivr.net/npm/@modelcontextprotocol/ext-apps@2.0.4/dist/src/app-with-deps.js";
 
   const app = new App({ name: "Notenübersicht", version: "1.0.0" }, {});
 
   // ---------- Hilfsfunktionen ----------
 
-  // Das Tool-Ergebnis kommt als JSON. structuredContent ist schon ein Objekt.
+  // Das Tool in src/index.py gibt ein Python-Dictionary zurück. Beim Host kommt es
+  // zweimal an: als fertiges Objekt (structuredContent) und als JSON-Text (content).
   function datenAus(ergebnis) {
     return ergebnis.structuredContent ?? JSON.parse(ergebnis.content[0].text);
   }
@@ -125,11 +149,12 @@
 
   // ---------- Verbindung zum Host ----------
 
-  // 1) Das LLM hat das Tool aufgerufen → der Host schickt uns das Ergebnis.
+  // (1) Das LLM hat das Tool aufgerufen → der Host schickt uns das Ergebnis.
   app.ontoolresult = (ergebnis) => anzeigen(datenAus(ergebnis));
 
-  // 2) Der MENSCH wechselt Klasse oder Fach → wir rufen das Tool selbst auf.
-  //    Das LLM ist daran NICHT beteiligt!
+  // (2) Der MENSCH wechselt Klasse oder Fach → wir rufen das Tool selbst auf.
+  //     Es ist dasselbe Tool wie in (1): notenuebersicht aus src/index.py.
+  //     Das LLM ist daran NICHT beteiligt!
   async function neuLaden() {
     const klasse = document.getElementById("klasse").value;
     const fach = document.getElementById("fach").value;
@@ -137,7 +162,8 @@
     const ergebnis = await app.callServerTool({ name: "notenuebersicht", arguments: { klasse, fach } });
     anzeigen(datenAus(ergebnis));
 
-    // Dem LLM still mitteilen, was der Mensch jetzt sieht (für spätere Fragen im Chat).
+    // (3) Dem LLM still mitteilen, was der Mensch jetzt sieht. Fragt der Mensch
+    //     danach im Chat "Wer ist hier am besten?", weiß das LLM, welche Klasse gemeint ist.
     try {
       await app.updateModelContext({
         content: [{ type: "text", text: `Der Mensch sieht jetzt die Notenübersicht ${fach} in der ${klasse}.` }],
@@ -147,12 +173,14 @@
   document.getElementById("klasse").addEventListener("change", neuLaden);
   document.getElementById("fach").addEventListener("change", neuLaden);
 
-  // 3) Helles oder dunkles Design vom Host übernehmen
+  // Helles oder dunkles Design vom Host übernehmen
   function designUebernehmen(kontext) {
     if (kontext?.theme) document.documentElement.dataset.theme = kontext.theme;
   }
   app.onhostcontextchanged = designUebernehmen;
 
+  // Erst jetzt verbinden: Alle Reaktionen (ontoolresult, ...) sind vorher festgelegt,
+  // damit keine Nachricht des Hosts verloren geht.
   await app.connect();
   designUebernehmen(app.getHostContext());
 </script>
