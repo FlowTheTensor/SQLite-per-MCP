@@ -147,4 +147,13 @@ def add_grade(schueler_id: int, kurs_id: int, note: float, art: str = "mündlich
         return f"Fehler: {str(e)}"
 
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    import sys
+
+    if "--http" in sys.argv:
+        # HTTP-Modus: für n8n, Docker oder andere Clients im Netzwerk.
+        # Der MCP-Endpunkt ist dann http://<rechner>:8000/mcp
+        mcp.run(transport="http", host="0.0.0.0", port=8000)
+    else:
+        # stdio-Modus (Standard): Claude Desktop und unser Harness starten den
+        # Server selbst als Unterprozess und sprechen über stdin/stdout mit ihm.
+        mcp.run(transport="stdio")

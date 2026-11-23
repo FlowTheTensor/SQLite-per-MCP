@@ -1,0 +1,178 @@
+{
+  "name": "A – Fester Workflow: Notenstand",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Workflow A – fester Ablauf\nDer **Mensch (Programmierer)** hat jeden Schritt vorher festgelegt.\nKein LLM entscheidet hier irgendetwas.\n\n1. Formular: Klasse + Fach\n2. **immer dieselbe** SQL-Abfrage über MCP\n3. Ergebnis anzeigen",
+        "width": 760,
+        "height": 240,
+        "color": 5
+      },
+      "id": "abb7045e-56b0-4234-89b2-5e1541eb505d",
+      "name": "Erklärung",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Notenstand abfragen",
+        "formDescription": "Fester Workflow – ohne KI",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Klasse",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "5a"
+                  },
+                  {
+                    "option": "5b"
+                  },
+                  {
+                    "option": "6a"
+                  },
+                  {
+                    "option": "6b"
+                  },
+                  {
+                    "option": "7a"
+                  },
+                  {
+                    "option": "7b"
+                  },
+                  {
+                    "option": "8a"
+                  },
+                  {
+                    "option": "8b"
+                  },
+                  {
+                    "option": "9a"
+                  },
+                  {
+                    "option": "9b"
+                  },
+                  {
+                    "option": "10a"
+                  },
+                  {
+                    "option": "10b"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Fach",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Deutsch"
+                  },
+                  {
+                    "option": "Englisch"
+                  },
+                  {
+                    "option": "Mathematik"
+                  },
+                  {
+                    "option": "Informatik"
+                  },
+                  {
+                    "option": "Sport"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "d998db84-f9af-460d-ad88-f2af3b53c111",
+      "name": "Formular: Klasse und Fach",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "533dd6dd-ee48-420e-b627-2a94b9158513"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://mcp-server:8000/mcp",
+        "tool": {
+          "__rl": true,
+          "mode": "list",
+          "value": "query_database",
+          "cachedResultName": "query_database"
+        },
+        "inputMode": "json",
+        "jsonInput": "={{ JSON.stringify({ query: \"SELECT ROUND(AVG(n.note),2) AS durchschnitt, COUNT(*) AS anzahl, MIN(n.note) AS beste, MAX(n.note) AS schlechteste FROM noten n JOIN kurse k ON k.id = n.kurs_id WHERE k.klasse = '\" + $json.Klasse + \"' AND k.fach = '\" + $json.Fach + \"'\" }) }}",
+        "options": {}
+      },
+      "id": "1eafe424-d3e4-42d8-b6d4-aef04a2e3c71",
+      "name": "MCP: query_database",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "showText",
+        "responseText": "={{ (() => { const r = JSON.parse($json.content?.[0]?.text ?? $json.result ?? '[]')[0]; return `<h2>${$('Formular: Klasse und Fach').item.json.Fach} in der ${$('Formular: Klasse und Fach').item.json.Klasse}</h2><p>Durchschnitt: <b>${r.durchschnitt}</b><br>Anzahl Noten: ${r.anzahl}<br>Beste Note: ${r.beste} – schlechteste Note: ${r.schlechteste}</p>`; })() }}"
+      },
+      "id": "4df82ce6-39bb-4d2b-b03b-e0e853593974",
+      "name": "Ergebnis anzeigen",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        520,
+        0
+      ],
+      "webhookId": "982e31d5-99b5-4a1b-8361-27be726e62a4"
+    }
+  ],
+  "connections": {
+    "Formular: Klasse und Fach": {
+      "main": [
+        [
+          {
+            "node": "MCP: query_database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP: query_database": {
+      "main": [
+        [
+          {
+            "node": "Ergebnis anzeigen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,498 @@
+{
+  "name": "C – Workflow mit Freigabe: Note eintragen",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Workflow C – Schreiben nur mit Freigabe (S2)\nDer Workflow sucht Schüler und Kurs selbst heraus und zeigt dem Menschen eine **verständliche** Freigabe-Seite mit Namen statt ids.\nErst nach **Ja** wird `add_grade` aufgerufen.",
+        "width": 1300,
+        "height": 220,
+        "color": 5
+      },
+      "id": "2bc4194f-3d7c-4f7e-a078-b998fe4c632d",
+      "name": "Erklärung",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Note eintragen",
+        "formDescription": "Schreibender Zugriff – mit Freigabe",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Klasse",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "5a"
+                  },
+                  {
+                    "option": "5b"
+                  },
+                  {
+                    "option": "6a"
+                  },
+                  {
+                    "option": "6b"
+                  },
+                  {
+                    "option": "7a"
+                  },
+                  {
+                    "option": "7b"
+                  },
+                  {
+                    "option": "8a"
+                  },
+                  {
+                    "option": "8b"
+                  },
+                  {
+                    "option": "9a"
+                  },
+                  {
+                    "option": "9b"
+                  },
+                  {
+                    "option": "10a"
+                  },
+                  {
+                    "option": "10b"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Nachname",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Fach",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Deutsch"
+                  },
+                  {
+                    "option": "Englisch"
+                  },
+                  {
+                    "option": "Mathematik"
+                  },
+                  {
+                    "option": "Informatik"
+                  },
+                  {
+                    "option": "Sport"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Note",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "1.0"
+                  },
+                  {
+                    "option": "1.3"
+                  },
+                  {
+                    "option": "1.7"
+                  },
+                  {
+                    "option": "2.0"
+                  },
+                  {
+                    "option": "2.3"
+                  },
+                  {
+                    "option": "2.7"
+                  },
+                  {
+                    "option": "3.0"
+                  },
+                  {
+                    "option": "3.3"
+                  },
+                  {
+                    "option": "3.7"
+                  },
+                  {
+                    "option": "4.0"
+                  },
+                  {
+                    "option": "4.3"
+                  },
+                  {
+                    "option": "4.7"
+                  },
+                  {
+                    "option": "5.0"
+                  },
+                  {
+                    "option": "5.3"
+                  },
+                  {
+                    "option": "5.7"
+                  },
+                  {
+                    "option": "6.0"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Art",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "mündlich"
+                  },
+                  {
+                    "option": "Schulaufgabe"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "7a5bb080-0a74-468e-b9c4-7dd552ef647d",
+      "name": "Formular: Note eintragen",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "c924cb1c-fad8-4e8b-ae2e-8b40083a07e8"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://mcp-server:8000/mcp",
+        "tool": {
+          "__rl": true,
+          "mode": "list",
+          "value": "query_database",
+          "cachedResultName": "query_database"
+        },
+        "inputMode": "json",
+        "jsonInput": "={{ JSON.stringify({ query: \"SELECT s.id AS schueler_id, s.vorname, s.nachname, s.klasse, k.id AS kurs_id, k.fach FROM schueler s JOIN kurse k ON k.klasse = s.klasse WHERE s.klasse = '\" + $json.Klasse + \"' AND k.fach = '\" + $json.Fach + \"' AND s.nachname = '\" + $json.Nachname.trim().replace(/'/g, \"''\") + \"'\" }) }}",
+        "options": {}
+      },
+      "id": "e6dfbb08-ef4e-4212-a14b-43b4a1cc23f8",
+      "name": "MCP: Schüler suchen",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ergebnis des MCP-Servers (Text mit JSON) in Felder umwandeln\nconst form = $('Formular: Note eintragen').first().json;\nconst text = $input.first().json.content?.[0]?.text ?? $input.first().json.result ?? '[]';\nlet treffer = [];\ntry { treffer = JSON.parse(text); } catch (e) { treffer = []; }\nconst t = treffer[0] || {};\nreturn [{ json: {\n  anzahl: treffer.length,\n  schueler_id: t.schueler_id, kurs_id: t.kurs_id,\n  name: `${t.vorname ?? ''} ${t.nachname ?? ''}`.trim(),\n  klasse: form.Klasse, fach: form.Fach,\n  note: Number(form.Note), art: form.Art,\n  kandidaten: treffer.map(x => `${x.vorname} ${x.nachname}`).join(', ')\n} }];"
+      },
+      "id": "37ef4052-ef0d-479e-b940-18f867dd1c27",
+      "name": "Treffer auswerten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7321f7bd-6a0f-49d4-abf0-a705d98b6388",
+              "leftValue": "={{ $json.anzahl }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "07b66c2b-c504-4868-bbaa-41f088203c3c",
+      "name": "Genau ein Treffer?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Entscheidung",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Ja, eintragen"
+                  },
+                  {
+                    "option": "Nein, abbrechen"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "formTitle": "Freigabe nötig",
+          "formDescription": "={{ `Soll die Note ${$json.note} (${$json.art}) für ${$json.name}, Klasse ${$json.klasse}, im Fach ${$json.fach} eingetragen werden?` }}"
+        }
+      },
+      "id": "bc2363e2-78f6-4d7c-958c-766c1d99dd68",
+      "name": "👤 Freigabe",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -100
+      ],
+      "webhookId": "1b868a99-4283-432c-b8e5-ce97b6dc8166"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bb706130-af5a-4dab-a971-170d65c5f6e6",
+              "leftValue": "={{ $json.Entscheidung }}",
+              "rightValue": "Ja, eintragen",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3e807aff-9466-47c0-888e-6a5466f5cf0a",
+      "name": "Freigegeben?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1160,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://mcp-server:8000/mcp",
+        "tool": {
+          "__rl": true,
+          "mode": "list",
+          "value": "add_grade",
+          "cachedResultName": "add_grade"
+        },
+        "inputMode": "json",
+        "jsonInput": "={{ JSON.stringify({ schueler_id: $('Treffer auswerten').item.json.schueler_id, kurs_id: $('Treffer auswerten').item.json.kurs_id, note: $('Treffer auswerten').item.json.note, art: $('Treffer auswerten').item.json.art }) }}",
+        "options": {}
+      },
+      "id": "1a24a4df-0454-4c43-b7c8-a1d9d9648abe",
+      "name": "MCP: add_grade",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1.1,
+      "position": [
+        1380,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "text",
+        "completionTitle": "Erledigt",
+        "completionMessage": "={{ $json.content?.[0]?.text ?? JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "b0ba898f-4bdc-4cd5-b581-0fcddbe05cca",
+      "name": "Fertig",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        -200
+      ],
+      "webhookId": "d460194c-1691-488c-a60b-9cdef5c2b4c3"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "text",
+        "completionTitle": "Abgebrochen",
+        "completionMessage": "Die Freigabe wurde verweigert. Es wurde nichts eingetragen.",
+        "options": {}
+      },
+      "id": "d643d97a-327f-43c2-bfc6-0d24a798be00",
+      "name": "Abgebrochen",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        0
+      ],
+      "webhookId": "107e7f4a-f1ac-4c25-94b8-c03c02e7dc07"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "text",
+        "completionTitle": "Nicht eindeutig",
+        "completionMessage": "={{ $json.anzahl === 0 ? 'Kein passender Schüler gefunden.' : 'Mehrere Treffer: ' + $json.kandidaten + '. Bitte genauer angeben.' }}",
+        "options": {}
+      },
+      "id": "03750d8c-d8fa-4174-bfe5-c51f4330a552",
+      "name": "Nicht eindeutig",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        940,
+        140
+      ],
+      "webhookId": "bafacfdf-d79a-48d4-8442-615c8cd1e403"
+    }
+  ],
+  "connections": {
+    "Formular: Note eintragen": {
+      "main": [
+        [
+          {
+            "node": "MCP: Schüler suchen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP: Schüler suchen": {
+      "main": [
+        [
+          {
+            "node": "Treffer auswerten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Treffer auswerten": {
+      "main": [
+        [
+          {
+            "node": "Genau ein Treffer?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Genau ein Treffer?": {
+      "main": [
+        [
+          {
+            "node": "👤 Freigabe",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nicht eindeutig",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "👤 Freigabe": {
+      "main": [
+        [
+          {
+            "node": "Freigegeben?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Freigegeben?": {
+      "main": [
+        [
+          {
+            "node": "MCP: add_grade",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Abgebrochen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP: add_grade": {
+      "main": [
+        [
+          {
+            "node": "Fertig",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

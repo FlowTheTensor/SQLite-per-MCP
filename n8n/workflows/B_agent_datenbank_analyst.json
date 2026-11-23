@@ -1,0 +1,231 @@
+{
+  "name": "B – Agent: Datenbank-Analyst",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🧰 HARNESS\nDer Knoten **AI Agent** ist der Harness: Er baut den Kontext, ruft das LLM in einer **Schleife** auf und führt Tool-Wünsche aus.\nGrenze: *Options → Max Iterations*.",
+        "width": 520,
+        "height": 520,
+        "color": 7
+      },
+      "id": "872ff132-adb1-4520-99ea-4f1d9035c9da",
+      "name": "Harness",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 👤 MENSCH\nS1 Auftrag über den Chat (unten: **Open chat**).",
+        "width": 320,
+        "height": 520,
+        "color": 3
+      },
+      "id": "98304ca9-09a6-4121-bf52-a4c188c59998",
+      "name": "Mensch",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -420,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🧠 LLM\nAustauschbar! Für Ollama die Verbindung auf den Knoten *Ollama* umstecken.",
+        "width": 560,
+        "height": 300,
+        "color": 4
+      },
+      "id": "da1baaf7-4652-4520-a388-0b1626c6d29c",
+      "name": "LLM",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -420,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔧 TOOLS (MCP)\nMCP-Client → unser `src/index.py`.\n**Tools to Include = Selected:** nur lesende Tools. `add_grade` sieht der Agent nicht (S0 / least privilege).",
+        "width": 420,
+        "height": 300,
+        "color": 6
+      },
+      "id": "8e333d57-ed71-442e-beff-f24e80d14d5c",
+      "name": "Tools",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📝 Verlauf\nSpeichert die letzten Nachrichten – ein Teil des Kontexts.",
+        "width": 300,
+        "height": 300,
+        "color": 2
+      },
+      "id": "3c0b1e0f-542f-45f5-b99f-528d30f17214",
+      "name": "Gedächtnis",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        620,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "3efd4a9e-e1a6-48dc-9fbe-94bed777f052",
+      "name": "Chat",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        0
+      ],
+      "webhookId": "da81fa3c-5e60-4976-8897-a8013895bc2b"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Du bist ein sorgfältiger Datenbank-Analyst für die Schul-Datenbank (SQLite).\n\nVorgehen:\n1. Wenn du die Tabellen noch nicht kennst: list_tables, dann describe_table für die nötigen Tabellen.\n2. Schreibe gezielte SELECT-Abfragen. Nutze JOINs und Aggregatfunktionen (COUNT, AVG, ...) statt riesiger Ergebnislisten.\n3. Erfinde niemals Zahlen. Jede Zahl in deiner Antwort muss aus einem Abfrageergebnis stammen.\n\nAntwortformat:\n- Kurze Antwort auf die Frage\n- Darunter die verwendete(n) SQL-Abfrage(n), damit ein Mensch sie nachprüfen kann\n\nAntworte auf Deutsch.",
+          "maxIterations": 10
+        }
+      },
+      "id": "70c8ac64-730f-4fc2-bec4-b3c33e57c500",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        60,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "claude-haiku-5-5"
+        },
+        "options": {}
+      },
+      "id": "5a33058f-fcde-420c-8903-7b849dc18774",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -320,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5:7b",
+        "options": {}
+      },
+      "id": "1dbccc3d-5b97-4fa7-8f8e-9916640bd9f1",
+      "name": "Ollama",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://mcp-server:8000/mcp",
+        "include": "selected",
+        "includeTools": [
+          "list_tables",
+          "describe_table",
+          "query_database"
+        ],
+        "options": {}
+      },
+      "id": "4836a7c4-d02f-4ba6-966a-db01ee0afbef",
+      "name": "MCP: Schul-Datenbank",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        300,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "f3ac0e51-9dd5-4760-b30d-e5e671cfbe16",
+      "name": "Verlauf",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        380
+      ]
+    }
+  ],
+  "connections": {
+    "Chat": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP: Schul-Datenbank": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verlauf": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
