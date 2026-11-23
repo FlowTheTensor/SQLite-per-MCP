@@ -134,6 +134,7 @@ SQLite-per-MCP/
 ├── generate_config.py    # erzeugt die Konfiguration für Claude Desktop
 ├── requirements.txt      # Python Abhängigkeiten
 ├── pyproject.toml        # Python Projekt-Konfiguration
+├── TODO.md               # offene Aufgaben am Projekt (für die Lehrkraft)
 └── schule.db             # Die SQLite-Datenbank (wird erstellt)
 ```
 
