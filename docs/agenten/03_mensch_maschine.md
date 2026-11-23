@@ -81,6 +81,29 @@ Diskussionsfrage: Weißt du hier, *welcher* Schüler und *welches* Fach gemeint 
 
 > ⚠️ **Gefahr der Gewöhnung:** Wer 50-mal hintereinander „ja“ drückt, liest irgendwann nicht mehr hin. Zu viele Freigaben sind fast so schlecht wie keine.
 
+> 🖼️ **Zum Vergleich:** Die Freigabe-App aus [Teil 1b](../mcp-apps.md) zeigt Namen statt ids und lässt den Menschen bei mehreren Treffern selbst auswählen.
+
+## Wer baut die Oberfläche? MCP Apps und A2UI
+
+Die meisten Schnittstellen in diesem Kapitel sind Text: Auftrag eintippen, „j“ drücken, Protokoll lesen. Agenten können dem Menschen aber auch **Oberflächen** zeigen: Tabellen, Formulare, Knöpfe. Dafür gibt es zwei verschiedene Ansätze:
+
+| | **MCP Apps** ([Teil 1b](../mcp-apps.md)) | **A2UI** (Agent-to-User Interface, von Google) |
+|---|---|---|
+| Wer legt die Oberfläche fest? | ein **Programmierer**, vorher | das **LLM**, zur Laufzeit |
+| Was wird übertragen? | eine fertige HTML-Seite | eine Beschreibung als JSON: „eine Karte mit Überschrift, darunter zwei Knöpfe …“ |
+| Wer zeichnet die Oberfläche? | der Browser im abgeschotteten iframe | der Client, mit **eigenen, vertrauenswürdigen** Bausteinen aus einem festen Katalog |
+| Wird fremder Code ausgeführt? | ja, das JavaScript der App (deshalb Sandbox und CSP) | nein, nur Daten |
+| Vergleichbar mit | **Workflow**: fester Ablauf | **Agent**: entscheidet selbst |
+
+Das ist dieselbe Unterscheidung wie in Kapitel 1 („Workflow oder Agent?“), diesmal für Oberflächen. Beide Ansätze lassen sich kombinieren: A2UI-Oberflächen können auch *innerhalb* einer MCP-App angezeigt werden.
+
+**Was bedeutet das für die Kontrolle durch den Menschen?**
+
+- Bei MCP Apps kann man die Freigabe-Seite vorher prüfen und testen. Sie sieht jedes Mal gleich aus.
+- Bei A2UI denkt sich das LLM die Seite jedes Mal neu aus. Das ist flexibel, aber der Mensch muss der Oberfläche selbst vertrauen können. Was, wenn ein Knopf „Abbrechen“ heißt, aber etwas einträgt? Der feste Bausteinkatalog begrenzt, *was* das LLM bauen kann. *Was es darstellt* und *welche Aktion hinter einem Knopf liegt*, muss trotzdem der Harness prüfen.
+
+> **Merke:** Eine Freigabe ist nur so gut wie die Anzeige, auf der sie beruht. Wer die Oberfläche baut, hat Einfluss darauf, was der Mensch freigibt.
+
 ## Verantwortung
 
 Ein Agent kann nicht verantwortlich sein – er ist ein Programm. Verantwortlich sind:
@@ -96,3 +119,4 @@ Ein Agent kann nicht verantwortlich sein – er ist ein Programm. Verantwortlich
 2. Warum hat der `notenverwalter` das Tool `frage_mensch`, der `datenbank-analyst` aber nicht?
 3. Auf welche Autonomiestufe würdest du einen Agenten setzen, der Zeugnisnoten berechnet? Begründe.
 4. Ein Agent trägt eine falsche Note ein, nachdem du „j“ gedrückt hast. Wer ist verantwortlich?
+5. Ein LLM baut mit A2UI selbst eine Freigabe-Oberfläche. Welche neuen Risiken entstehen im Vergleich zur festen Freigabe-App aus Teil 1b?

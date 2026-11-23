@@ -2,11 +2,12 @@
 
 Ein Projekt zum Lernen, wie man eine SQLite-Datenbank mit einem LLM über einen MCP-Server abfragt. Verwendet FastMCP für eine einfache Python-Implementierung.
 
-Das Projekt besteht aus zwei Teilen:
+Das Projekt besteht aus drei Teilen:
 
 | Teil | Thema | Wer ist der MCP-Client? |
 |---|---|---|
 | **Teil 1** (diese Seite) | MCP: Ein LLM fragt über einen MCP-Server eine Datenbank ab | Claude Desktop |
+| **[Teil 1b: MCP Apps](docs/mcp-apps.md)** | Tools mit eigener Oberfläche im Chat: Notenübersicht und Freigabe per Klick | Claude Desktop |
 | **[Teil 2: Agenten & Multiagentensysteme](agenten/README.md)** | Was ist ein Agent? Was ist ein Harness? Wo greift der Mensch ein? Wie arbeiten mehrere Agenten zusammen? | unser eigener, lesbarer Harness |
 
 ## Was ist MCP?
@@ -126,7 +127,9 @@ sequenceDiagram
 ```
 SQLite-per-MCP/
 ├── src/
-│   └── index.py          # Der MCP-Server Code (Python)
+│   ├── index.py          # Der MCP-Server Code (Python)
+│   └── apps/             # Teil 1b: HTML-Oberflächen der MCP Apps
+├── docs/mcp-apps.md      # Teil 1b: Unterrichtsmaterial MCP Apps
 ├── agenten/              # Teil 2: eigener Agenten-Harness + Agenten-Definitionen
 ├── docs/agenten/         # Teil 2: Unterrichtsmaterial (Begriffe, Harness, Schnittstellen, Multiagenten, Aufgaben, n8n)
 ├── n8n/                  # Teil 2, Kapitel 6: docker-compose.yml + drei n8n-Workflows
@@ -327,6 +330,7 @@ Die Datenbank hat 4 Tabellen:
    - `describe_table` - Wie sieht eine Tabelle aus?
    - `query_database` - SQL-Abfrage ausführen (nur SELECT)
    - `add_grade` - Note eintragen (**schreibend** – Claude Desktop fragt vorher um Erlaubnis)
+   - `notenuebersicht`, `note_vorschlagen` - Tools mit eigener Oberfläche (siehe [Teil 1b](docs/mcp-apps.md))
 4. Der MCP-Server führt die Abfrage aus
 5. Claude bekommt das Ergebnis und antwortet dir
 
@@ -342,6 +346,10 @@ Viel Erfolg! 🚀
 
 ## Wie geht es weiter?
 
-Claude Desktop hat in diesem Teil vieles für dich erledigt, ohne dass du es gesehen hast: Es hat das LLM aufgerufen, die Tools ausgewählt, die Ergebnisse zurückgegeben und dich um Erlaubnis gefragt. Genau dieses Programm nennt man **Harness**.
+Bisher hat der MCP-Server nur Text zurückgegeben.
+
+➡️ **[Teil 1b: MCP Apps](docs/mcp-apps.md)** – dort liefert der Server eine Oberfläche mit, die direkt im Chat erscheint: eine Notenübersicht zum Durchklicken und eine Freigabe, bei der du Namen statt ids siehst.
+
+Claude Desktop hat in diesen Teilen vieles für dich erledigt, ohne dass du es gesehen hast: Es hat das LLM aufgerufen, die Tools ausgewählt, die Ergebnisse zurückgegeben, Oberflächen angezeigt und dich um Erlaubnis gefragt. Genau dieses Programm nennt man **Harness**.
 
 ➡️ **[Teil 2: Agenten & Multiagentensysteme](agenten/README.md)** – dort baust du einen Harness selbst nach, spielst selbst das LLM und lässt mehrere Agenten zusammenarbeiten.

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notenübersicht</title>
+<style>
+  /* Farben für helles Design (Standard) */
+  :root {
+    --hintergrund: #ffffff; --text: #1f2328; --leise: #656d76; --linie: #d0d7de;
+    --balken: #4c7bd9; --gut: #1a7f37; --mittel: #9a6700; --schlecht: #cf222e;
+  }
+  /* Farben für dunkles Design – der Host sagt uns, welches gerade aktiv ist */
+  :root[data-theme="dark"] {
+    --hintergrund: #1e1e1e; --text: #e6edf3; --leise: #9198a1; --linie: #3d444d;
+    --balken: #6e9bf5; --gut: #4ac26b; --mittel: #d4a72c; --schlecht: #ff7b72;
+  }
+  body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; font-size: 14px;
+         background: var(--hintergrund); color: var(--text); }
+  h2 { margin: 0 0 12px; font-size: 18px; }
+  h3 { margin: 20px 0 8px; font-size: 14px; color: var(--leise); text-transform: uppercase; letter-spacing: .04em; }
+  .auswahl { display: flex; gap: 12px; flex-wrap: wrap; }
+  select { font: inherit; padding: 4px 8px; border: 1px solid var(--linie); border-radius: 6px;
+           background: var(--hintergrund); color: var(--text); }
+  .status { color: var(--leise); margin: 8px 0 0; min-height: 1.2em; }
+
+  /* Balkendiagramm aus einfachen div-Elementen */
+  .verteilung { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+  .saeule { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .saeule .balken { width: 100%; background: var(--balken); border-radius: 4px 4px 0 0; min-height: 2px; }
+  .saeule .zahl, .saeule .stufe { font-size: 12px; color: var(--leise); }
+  .saeule .stufe { font-weight: 600; color: var(--text); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--linie); }
+  th { color: var(--leise); font-weight: 600; }
+  td.zahl, th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
+  .gut { color: var(--gut); } .mittel { color: var(--mittel); } .schlecht { color: var(--schlecht); font-weight: 600; }
+</style>
+</head>
+<body>
+  <h2 id="titel">Notenübersicht</h2>
+
+  <div class="auswahl">
+    <label>Klasse <select id="klasse"></select></label>
+    <label>Fach <select id="fach"></select></label>
+  </div>
+  <p class="status" id="status">Warte auf Daten …</p>
+
+  <h3>Notenverteilung</h3>
+  <div class="verteilung" id="verteilung"></div>
+
+  <h3>Schülerinnen und Schüler</h3>
+  <table>
+    <thead><tr><th>Name</th><th class="zahl">Noten</th><th class="zahl">Durchschnitt</th></tr></thead>
+    <tbody id="tabelle"></tbody>
+  </table>
+
+<script type="module">
+  // Die Bibliothek für die Verbindung zum Host (Claude Desktop, ...).
+  // Die Adresse muss im Server unter "csp" erlaubt sein!
+  import { App } from "https://cdn.jsdelivr.net/npm/@modelcontextprotocol/ext-apps@2.0.4/dist/src/app-with-deps.js";
+
+  const app = new App({ name: "Notenübersicht", version: "1.0.0" }, {});
+
+  // ---------- Hilfsfunktionen ----------
+
+  // Das Tool-Ergebnis kommt als JSON. structuredContent ist schon ein Objekt.
+  function datenAus(ergebnis) {
+    return ergebnis.structuredContent ?? JSON.parse(ergebnis.content[0].text);
+  }
+
+  // Neues HTML-Element mit Text erzeugen. textContent statt innerHTML,
+  // damit Namen aus der Datenbank nie als HTML-Code ausgeführt werden.
+  function element(tag, text, klasse) {
+    const e = document.createElement(tag);
+    if (text !== undefined) e.textContent = text;
+    if (klasse) e.className = klasse;
+    return e;
+  }
+
+  function farbeFuer(note) {
+    if (note === null) return "";
+    if (note < 2.5) return "gut";
+    if (note < 4.5) return "mittel";
+    return "schlecht";
+  }
+
+  function auswahlFuellen(select, werte, aktuell) {
+    select.replaceChildren(...werte.map(w => element("option", w)));
+    select.value = aktuell;
+  }
+
+  // ---------- Daten anzeigen ----------
+
+  function anzeigen(daten) {
+    document.getElementById("titel").textContent = `Notenübersicht: ${daten.fach} in der ${daten.klasse}`;
+    auswahlFuellen(document.getElementById("klasse"), daten.klassen, daten.klasse);
+    auswahlFuellen(document.getElementById("fach"), daten.faecher, daten.fach);
+
+    // Balkendiagramm
+    const maximum = Math.max(1, ...Object.values(daten.verteilung));
+    const saeulen = Object.entries(daten.verteilung).map(([stufe, anzahl]) => {
+      const saeule = element("div", undefined, "saeule");
+      const balken = element("div", undefined, "balken");
+      balken.style.height = `${(anzahl / maximum) * 85}%`;
+      saeule.append(element("span", anzahl, "zahl"), balken, element("span", stufe, "stufe"));
+      return saeule;
+    });
+    document.getElementById("verteilung").replaceChildren(...saeulen);
+
+    // Tabelle
+    const zeilen = daten.schueler.map(s => {
+      const tr = element("tr");
+      tr.append(
+        element("td", `${s.vorname} ${s.nachname}`),
+        element("td", s.anzahl, "zahl"),
+        element("td", s.durchschnitt ?? "–", `zahl ${farbeFuer(s.durchschnitt)}`),
+      );
+      return tr;
+    });
+    document.getElementById("tabelle").replaceChildren(...zeilen);
+    document.getElementById("status").textContent = `${daten.schueler.length} Schülerinnen und Schüler`;
+  }
+
+  // ---------- Verbindung zum Host ----------
+
+  // 1) Das LLM hat das Tool aufgerufen → der Host schickt uns das Ergebnis.
+  app.ontoolresult = (ergebnis) => anzeigen(datenAus(ergebnis));
+
+  // 2) Der MENSCH wechselt Klasse oder Fach → wir rufen das Tool selbst auf.
+  //    Das LLM ist daran NICHT beteiligt!
+  async function neuLaden() {
+    const klasse = document.getElementById("klasse").value;
+    const fach = document.getElementById("fach").value;
+    document.getElementById("status").textContent = "Lade …";
+    const ergebnis = await app.callServerTool({ name: "notenuebersicht", arguments: { klasse, fach } });
+    anzeigen(datenAus(ergebnis));
+
+    // Dem LLM still mitteilen, was der Mensch jetzt sieht (für spätere Fragen im Chat).
+    try {
+      await app.updateModelContext({
+        content: [{ type: "text", text: `Der Mensch sieht jetzt die Notenübersicht ${fach} in der ${klasse}.` }],
+      });
+    } catch (fehler) { /* nicht jeder Host unterstützt das – dann eben nicht */ }
+  }
+  document.getElementById("klasse").addEventListener("change", neuLaden);
+  document.getElementById("fach").addEventListener("change", neuLaden);
+
+  // 3) Helles oder dunkles Design vom Host übernehmen
+  function designUebernehmen(kontext) {
+    if (kontext?.theme) document.documentElement.dataset.theme = kontext.theme;
+  }
+  app.onhostcontextchanged = designUebernehmen;
+
+  await app.connect();
+  designUebernehmen(app.getHostContext());
+</script>
+</body>
+</html>

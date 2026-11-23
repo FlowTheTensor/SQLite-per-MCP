@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notenfreigabe</title>
+<style>
+  :root {
+    --hintergrund: #ffffff; --text: #1f2328; --leise: #656d76; --linie: #d0d7de; --karte: #f6f8fa;
+    --ja: #1a7f37; --nein: #cf222e;
+  }
+  :root[data-theme="dark"] {
+    --hintergrund: #1e1e1e; --text: #e6edf3; --leise: #9198a1; --linie: #3d444d; --karte: #262c36;
+    --ja: #2ea043; --nein: #f85149;
+  }
+  body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; font-size: 14px;
+         background: var(--hintergrund); color: var(--text); }
+  .karte { border: 1px solid var(--linie); border-radius: 10px; padding: 16px; background: var(--karte); }
+  h2 { margin: 0 0 4px; font-size: 18px; }
+  .leise { color: var(--leise); margin: 0 0 12px; }
+  .frage { font-size: 16px; line-height: 1.5; margin: 12px 0; }
+  .wahl label { display: block; padding: 6px 0; }
+  .knoepfe { display: flex; gap: 8px; margin-top: 16px; }
+  button { font: inherit; font-weight: 600; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; color: #fff; }
+  button.ja { background: var(--ja); } button.nein { background: var(--nein); }
+  button:disabled { opacity: .5; cursor: default; }
+  .ergebnis { margin-top: 16px; font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="karte">
+    <h2>👤 Freigabe nötig</h2>
+    <p class="leise">Das LLM hat eine Note vorgeschlagen. Nur du kannst sie eintragen.</p>
+    <div id="inhalt">Warte auf den Vorschlag …</div>
+    <div class="knoepfe" id="knoepfe" hidden>
+      <button class="ja" id="ja">Ja, eintragen</button>
+      <button class="nein" id="nein">Nein, abbrechen</button>
+    </div>
+    <p class="ergebnis" id="ergebnis"></p>
+  </div>
+
+<script type="module">
+  import { App } from "https://cdn.jsdelivr.net/npm/@modelcontextprotocol/ext-apps@2.0.4/dist/src/app-with-deps.js";
+
+  const app = new App({ name: "Notenfreigabe", version: "1.0.0" }, {});
+  let vorschlag = null;
+
+  function datenAus(ergebnis) {
+    return ergebnis.structuredContent ?? JSON.parse(ergebnis.content[0].text);
+  }
+
+  function element(tag, text) {
+    const e = document.createElement(tag);
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  // Dem LLM still mitteilen, wie der Mensch entschieden hat.
+  async function demLlmMitteilen(text) {
+    try {
+      await app.updateModelContext({ content: [{ type: "text", text }] });
+    } catch (fehler) { /* nicht jeder Host unterstützt das */ }
+  }
+
+  // ---------- Vorschlag anzeigen ----------
+
+  function anzeigen(daten) {
+    vorschlag = daten;
+    const inhalt = document.getElementById("inhalt");
+    const was = `die Note ${daten.note} (${daten.art}) im Fach ${daten.fach}, Klasse ${daten.klasse}`;
+
+    if (!(daten.note >= 1 && daten.note <= 6)) {
+      inhalt.replaceChildren(element("p", `Die vorgeschlagene Note ${daten.note} ist ungültig (erlaubt: 1.0 bis 6.0).`));
+      return;
+    }
+    if (daten.kandidaten.length === 0) {
+      inhalt.replaceChildren(element("p", `In der ${daten.klasse} gibt es niemanden mit diesem Nachnamen. Es wird nichts eingetragen.`));
+      return;
+    }
+
+    if (daten.kandidaten.length === 1) {
+      const k = daten.kandidaten[0];
+      inhalt.replaceChildren(element("p", `Soll ${was} für ${k.vorname} ${k.nachname} eingetragen werden?`));
+      inhalt.firstChild.className = "frage";
+    } else {
+      // Mehrere Treffer: Der MENSCH wählt aus – nicht das LLM.
+      const wahl = element("div");
+      wahl.className = "wahl";
+      daten.kandidaten.forEach((k, i) => {
+        const label = element("label");
+        const radio = document.createElement("input");
+        radio.type = "radio"; radio.name = "kandidat"; radio.value = i;
+        label.append(radio, ` ${k.vorname} ${k.nachname}`);
+        wahl.append(label);
+      });
+      const frage = element("p", `Für wen soll ${was} eingetragen werden? Es gibt ${daten.kandidaten.length} Treffer:`);
+      frage.className = "frage";
+      inhalt.replaceChildren(frage, wahl);
+    }
+    document.getElementById("knoepfe").hidden = false;
+  }
+
+  function gewaehlterKandidat() {
+    if (vorschlag.kandidaten.length === 1) return vorschlag.kandidaten[0];
+    const radio = document.querySelector("input[name=kandidat]:checked");
+    return radio ? vorschlag.kandidaten[Number(radio.value)] : null;
+  }
+
+  function fertig(text) {
+    document.getElementById("ja").disabled = true;
+    document.getElementById("nein").disabled = true;
+    document.getElementById("ergebnis").textContent = text;
+  }
+
+  // ---------- Entscheidung des Menschen ----------
+
+  document.getElementById("ja").addEventListener("click", async () => {
+    const k = gewaehlterKandidat();
+    if (!k) { document.getElementById("ergebnis").textContent = "Bitte zuerst eine Person auswählen."; return; }
+
+    // Erst JETZT wird geschrieben – ausgelöst durch den Klick eines Menschen.
+    const ergebnis = await app.callServerTool({
+      name: "note_freigeben",
+      arguments: { schueler_id: k.schueler_id, kurs_id: k.kurs_id, note: vorschlag.note, art: vorschlag.art },
+    });
+    const text = ergebnis.content[0].text;
+    fertig(text.startsWith("OK") ? `✅ ${text}` : `⚠️ ${text}`);
+    await demLlmMitteilen(`Der Mensch hat die Note freigegeben. Ergebnis: ${text}`);
+  });
+
+  document.getElementById("nein").addEventListener("click", async () => {
+    fertig("❌ Abgebrochen. Es wurde nichts eingetragen.");
+    await demLlmMitteilen("Der Mensch hat die Freigabe verweigert. Es wurde keine Note eingetragen.");
+  });
+
+  // ---------- Verbindung zum Host ----------
+
+  app.ontoolresult = (ergebnis) => anzeigen(datenAus(ergebnis));
+
+  function designUebernehmen(kontext) {
+    if (kontext?.theme) document.documentElement.dataset.theme = kontext.theme;
+  }
+  app.onhostcontextchanged = designUebernehmen;
+
+  await app.connect();
+  designUebernehmen(app.getHostContext());
+</script>
+</body>
+</html>

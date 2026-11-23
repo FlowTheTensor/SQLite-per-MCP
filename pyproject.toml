@@ -8,7 +8,7 @@ license = { text = "GPL-3.0" }
 keywords = ["mcp", "sqlite", "database"]
 
 dependencies = [
-    "fastmcp"
+    "fastmcp==3.4.11"
 ]
 
 [project.scripts]
