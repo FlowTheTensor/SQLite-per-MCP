@@ -75,6 +75,21 @@ Zwei Dinge sind neu:
 
 Damit das LLM trotzdem weiß, was der Mensch gerade sieht, kann die App ihm mit `updateModelContext` still eine Notiz schicken. Fragst du danach im Chat „Wer ist hier am besten?“, weiß Claude, dass die 8b gemeint ist.
 
+### Ist eine MCP-App ein Tunnel zum Server?
+
+Man könnte meinen, die App sei ein Tunnel, der den Menschen direkt mit dem MCP-Server verbindet. Das stimmt nur zur Hälfte:
+
+| Stimmt | Stimmt nicht |
+|---|---|
+| Klickt der Mensch in der App, wird das **LLM nicht gefragt**. Es kann dabei nichts verändern oder erfinden. | Die App hat **keine eigene Verbindung** zum Server. Jeder Aufruf geht als Nachricht an den **Host**, und der leitet ihn weiter. |
+| Bei der Freigabe ist das gewollt: Die Entscheidung läuft am LLM vorbei. | Der Host ist der **Harness**. Er zeigt die App abgeschottet an, prüft die CSP und entscheidet, welche Tools die App aufrufen darf. |
+| | Das **LLM öffnet** die App mit seinem Tool-Aufruf und sieht das erste Ergebnis. |
+| | Das LLM bleibt **informiert** (`updateModelContext`). Ein Tunnel wäre unsichtbar. |
+
+**Ein besseres Bild ist ein Bankschalter:** Der Berater (das LLM) schickt dich an den Schalter (die App). Dort erledigst du dein Geschäft direkt mit der Bank (dem MCP-Server), ohne dass der Berater dabei ist. Der Schalter gehört aber zur Filiale (dem Host): Sie bestimmt, was am Schalter möglich ist, und hat alles im Blick. Hinterher bekommt der Berater eine Notiz, was du erledigt hast.
+
+> **Merke:** Eine MCP-App ist ein Weg **am LLM vorbei**, aber **nie am Harness vorbei**.
+
 ---
 
 ## Die HTML-Seite: so spricht sie mit dem Host
@@ -189,6 +204,7 @@ Bei MCP Apps hat ein **Programmierer** die Oberfläche vorher gebaut. Das LLM en
 1. Aus welchen zwei Teilen besteht eine MCP-App? Wo stehen sie in unserem Projekt?
 2. Wer zeigt die HTML-Seite an: das LLM, der Host oder der MCP-Server?
 3. Die App ruft `callServerTool` auf. Ist das LLM daran beteiligt? Begründe mit dem Sequenzdiagramm.
-4. Warum ist `note_vorschlagen` ungefährlich, `note_freigeben` aber nicht?
-5. Erkläre, warum `visibility=["app"]` keine Sicherheitsgrenze ist.
-6. Was passiert, wenn ein Host keine MCP Apps unterstützt?
+4. „Eine MCP-App ist ein Tunnel zwischen Mensch und Server.“ Was ist an diesem Satz richtig, was falsch?
+5. Warum ist `note_vorschlagen` ungefährlich, `note_freigeben` aber nicht?
+6. Erkläre, warum `visibility=["app"]` keine Sicherheitsgrenze ist.
+7. Was passiert, wenn ein Host keine MCP Apps unterstützt?
