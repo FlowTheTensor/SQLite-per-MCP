@@ -11,11 +11,18 @@ Er weiß nichts über KI. Er wartet nur auf Anfragen und beantwortet sie.
     unser eigener Harness   (Teil 2)          stdio  (agenten/harness/mcp_bruecke.py)
     n8n im Docker-Container (Teil 2, Kap. 6)  HTTP   (python src/index.py --http)
 
-Ein MCP-Server kann zwei Arten von Dingen anbieten:
+Ein MCP-Server kann drei Arten von Dingen anbieten:
 
     TOOLS       Funktionen, die ein Client aufrufen kann       (MCP: tools/list, tools/call)
     RESSOURCEN  Inhalte, die ein Client lesen kann, z. B.      (MCP: resources/list, resources/read)
                 HTML-Seiten für MCP Apps
+    PROMPTS     vorbereitete Textvorlagen, die der Mensch      (MCP: prompts/list, prompts/get)
+                auswählen kann, z. B. "Notenbericht für
+                Klasse ___ erstellen"
+
+Dieser Server nutzt nur Tools und Ressourcen. Auf Prompts verzichten wir
+bewusst, damit das Beispiel übersichtlich bleibt. In FastMCP ginge das genauso
+einfach mit @mcp.prompt() vor einer Funktion, die einen Text zurückgibt.
 
 Aufbau dieser Datei:
     1. Grundlagen: Server und Datenbankverbindung
