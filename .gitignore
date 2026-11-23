@@ -3,3 +3,6 @@ venv/
 *.docx
 claude_desktop_config.json
 schule.db
+# Protokolle der Agenten-Läufe
+agenten/protokolle/
+__pycache__/

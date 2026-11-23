@@ -2,6 +2,13 @@
 
 Ein Projekt zum Lernen, wie man eine SQLite-Datenbank mit einem LLM über einen MCP-Server abfragt. Verwendet FastMCP für eine einfache Python-Implementierung.
 
+Das Projekt besteht aus zwei Teilen:
+
+| Teil | Thema | Wer ist der MCP-Client? |
+|---|---|---|
+| **Teil 1** (diese Seite) | MCP: Ein LLM fragt über einen MCP-Server eine Datenbank ab | Claude Desktop |
+| **[Teil 2: Agenten & Multiagentensysteme](agenten/README.md)** | Was ist ein Agent? Was ist ein Harness? Wo greift der Mensch ein? Wie arbeiten mehrere Agenten zusammen? | unser eigener, lesbarer Harness |
+
 ## Was ist MCP?
 
 Das **Model Context Protocol (MCP)** ist ein offener Standard, der es Large Language Models (LLMs) ermöglicht, mit externen Datenquellen und Tools zu kommunizieren. In diesem Projekt nutzen wir MCP, um einem LLM Zugriff auf eine SQLite-Datenbank zu geben.
@@ -117,13 +124,16 @@ sequenceDiagram
 ## Projektstruktur
 
 ```
-sqlite-mcp/
+SQLite-per-MCP/
 ├── src/
 │   └── index.py          # Der MCP-Server Code (Python)
+├── agenten/              # Teil 2: eigener Agenten-Harness + Agenten-Definitionen
+├── docs/agenten/         # Teil 2: Unterrichtsmaterial (Begriffe, Harness, Schnittstellen, Multiagenten, Aufgaben)
 ├── create_database.py    # Script zum Initialisieren der Datenbank
+├── generate_config.py    # erzeugt die Konfiguration für Claude Desktop
 ├── requirements.txt      # Python Abhängigkeiten
 ├── pyproject.toml        # Python Projekt-Konfiguration
-└── schule.db            # Die SQLite-Datenbank (wird erstellt)
+└── schule.db             # Die SQLite-Datenbank (wird erstellt)
 ```
 
 ## Die Beispiel-Datenbank
@@ -132,19 +142,18 @@ Die Datenbank `schule.db` enthält vier Tabellen:
 
 ### 1. **schueler**
 - Enthält Informationen über Schüler (Name, Klasse, Geburtsdatum, Email)
-- 10 Beispiel-Schüler aus verschiedenen Klassen
+- 12 Klassen (5a–10b) mit je 17 Schülern, also 204 Schüler (Namen werden zufällig erzeugt)
 
 ### 2. **lehrer**
-- Informationen über Lehrer (Name, Fach, Raum)
-- 5 Lehrer mit verschiedenen Fächern
+- Informationen über Lehrer (Name, zwei Fächer, Raum)
+- 10 Lehrer
 
 ### 3. **kurse**
-- Kursinformationen (Name, Lehrer, Raum, Zeitplan)
-- 5 verschiedene Kurse
+- Ein Kurs = ein Fach in einer Klasse mit einer Lehrkraft
+- Fächer: Deutsch, Englisch, Mathematik, Informatik, Sport
 
 ### 4. **noten**
-- Noten von Schülern in verschiedenen Kursen
-- Verschiedene Arten: Klausuren, mündliche Noten, Hausaufgaben
+- Pro Schüler und Kurs 2 Schulaufgaben und 3 mündliche Noten
 
 # Installationsanleitung: SQLite MCP Server (FastMCP)
 
@@ -283,10 +292,10 @@ Die Datenbank hat 4 Tabellen:
 - id, vorname, nachname, klasse, geburtsdatum, email
 
 👨‍🏫 **lehrer**: Lehrerinformationen  
-- id, vorname, nachname, fach, raum
+- id, vorname, nachname, fach1, fach2, raum
 
 📖 **kurse**: Kursinformationen
-- id, kursname, lehrer_id, raum, wochentag, uhrzeit
+- id, fach, klasse, lehrer_id
 
 📝 **noten**: Noten
 - id, schueler_id, kurs_id, note, datum, art
@@ -314,7 +323,8 @@ Die Datenbank hat 4 Tabellen:
 3. Claude ruft eines der Tools auf:
    - `list_tables` - Welche Tabellen gibt es?
    - `describe_table` - Wie sieht eine Tabelle aus?
-   - `query_database` - SQL-Abfrage ausführen
+   - `query_database` - SQL-Abfrage ausführen (nur SELECT)
+   - `add_grade` - Note eintragen (**schreibend** – Claude Desktop fragt vorher um Erlaubnis)
 4. Der MCP-Server führt die Abfrage aus
 5. Claude bekommt das Ergebnis und antwortet dir
 
@@ -328,13 +338,8 @@ Die Datenbank hat 4 Tabellen:
 
 Viel Erfolg! 🚀
 
+## Wie geht es weiter?
 
+Claude Desktop hat in diesem Teil vieles für dich erledigt, ohne dass du es gesehen hast: Es hat das LLM aufgerufen, die Tools ausgewählt, die Ergebnisse zurückgegeben und dich um Erlaubnis gefragt. Genau dieses Programm nennt man **Harness**.
 
-
-
-
-
-
-
-
-
+➡️ **[Teil 2: Agenten & Multiagentensysteme](agenten/README.md)** – dort baust du einen Harness selbst nach, spielst selbst das LLM und lässt mehrere Agenten zusammenarbeiten.

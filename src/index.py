@@ -97,5 +97,54 @@ def describe_table(table_name: str) -> str:
     except Exception as e:
         return f"Fehler: {str(e)}"
 
+@mcp.tool()
+def add_grade(schueler_id: int, kurs_id: int, note: float, art: str = "mündlich") -> str:
+    """SCHREIBENDES Tool: Trägt eine neue Note in die Datenbank ein.
+
+    Achtung: Dieses Tool verändert Daten! Ein guter Harness sollte vor dem
+    Aufruf die Freigabe eines Menschen einholen (Human-in-the-Loop).
+
+    Args:
+        schueler_id: id des Schülers aus der Tabelle schueler
+        kurs_id: id des Kurses aus der Tabelle kurse (Kurs muss zur Klasse des Schülers passen)
+        note: Note zwischen 1.0 und 6.0
+        art: 'mündlich' oder 'Schulaufgabe'
+
+    Returns:
+        Bestätigung mit der id der neuen Note oder eine Fehlermeldung
+    """
+    try:
+        if not 1.0 <= note <= 6.0:
+            return "Fehler: Die Note muss zwischen 1.0 und 6.0 liegen."
+        if art not in ("mündlich", "Schulaufgabe"):
+            return "Fehler: art muss 'mündlich' oder 'Schulaufgabe' sein."
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT klasse FROM schueler WHERE id = ?", (schueler_id,))
+        schueler = cursor.fetchone()
+        cursor.execute("SELECT klasse FROM kurse WHERE id = ?", (kurs_id,))
+        kurs = cursor.fetchone()
+        if schueler is None or kurs is None:
+            conn.close()
+            return "Fehler: Schüler oder Kurs existiert nicht."
+        if schueler["klasse"] != kurs["klasse"]:
+            conn.close()
+            return "Fehler: Der Kurs gehört nicht zur Klasse des Schülers."
+
+        from datetime import date
+        cursor.execute(
+            "INSERT INTO noten (schueler_id, kurs_id, note, datum, art) VALUES (?, ?, ?, ?, ?)",
+            (schueler_id, kurs_id, note, date.today().isoformat(), art),
+        )
+        conn.commit()
+        neue_id = cursor.lastrowid
+        conn.close()
+        return f"OK: Note {note} ({art}) für Schüler {schueler_id} in Kurs {kurs_id} eingetragen (noten.id = {neue_id})."
+
+    except Exception as e:
+        return f"Fehler: {str(e)}"
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")
