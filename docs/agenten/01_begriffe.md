@@ -85,6 +85,8 @@ Nicht jedes System mit LLM ist ein Agent. Man unterscheidet:
 Faustregel: **So einfach wie möglich.** Einen Agenten baut man erst, wenn ein fester Ablauf nicht reicht.
 (Nach Anthropic: *[Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)*)
 
+> 🔎 **Direkt vergleichen:** In [Kapitel 6](06_n8n.md) stehen ein fester Workflow und ein Agent in n8n nebeneinander. Beide benutzen denselben MCP-Server.
+
 ---
 
 ## Was „sieht“ ein LLM eigentlich?

@@ -1,0 +1,67 @@
+# ============================================================
+# n8n + MCP-Server für Kapitel 6 ("Derselbe Agent in n8n")
+#
+# Starten (PowerShell, im Ordner n8n):
+#     docker compose up -d
+#
+# Workflows einmalig importieren:
+#     docker compose exec n8n n8n import:workflow --separate --input=/workflows
+#
+# Danach im Browser öffnen:  http://localhost:5678
+# Stoppen:                   docker compose down
+# ============================================================
+
+services:
+
+  # ---------- 1. Unser MCP-Server (src/index.py) im HTTP-Modus ----------
+  mcp-server:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      # Der ganze Projektordner wird in den Container eingeblendet.
+      # Änderungen an src/index.py wirken nach "docker compose restart mcp-server".
+      - ..:/app
+    command: >
+      sh -c "pip install --quiet --root-user-action=ignore -r requirements.txt &&
+             if [ ! -f schule.db ]; then python create_database.py; fi &&
+             python src/index.py --http"
+    ports:
+      # Von Windows aus erreichbar unter http://localhost:8000/mcp – aber NUR vom
+      # eigenen Rechner (127.0.0.1). Sonst könnte jeder im Netz ohne Anmeldung
+      # add_grade aufrufen. n8n erreicht den Server intern unter http://mcp-server:8000/mcp
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+
+  # ---------- 2. n8n – der zweite Harness ----------
+  n8n:
+    # Feste Version, damit die Workflows aus n8n/workflows sicher passen.
+    image: docker.n8n.io/n8nio/n8n:2.48.8
+    ports:
+      # Ist 5678 schon belegt, einen anderen Port wählen, z. B. in PowerShell:
+      #     $env:N8N_PORT = "5679"; docker compose up -d
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      - GENERIC_TIMEZONE=Europe/Berlin
+      - TZ=Europe/Berlin
+      # Erlaubt den Zugriff per http:// (ohne https) im Schulnetz
+      - N8N_SECURE_COOKIE=false
+      # Die Adresse, unter der n8n im Browser erreichbar ist. n8n baut daraus die
+      # Links für Chat und Formulare. Auf einem Schulserver z. B. in PowerShell:
+      #     $env:N8N_URL = "http://lehrerserver:5678"; docker compose up -d
+      - WEBHOOK_URL=${N8N_URL:-http://localhost:${N8N_PORT:-5678}}/
+      - N8N_EDITOR_BASE_URL=${N8N_URL:-http://localhost:${N8N_PORT:-5678}}/
+    volumes:
+      # Hier speichert n8n Benutzer, Workflows und Zugangsdaten (Credentials)
+      - n8n_data:/home/node/.n8n
+      # Unsere Workflow-Dateien, nur lesend
+      - ./workflows:/workflows:ro
+    extra_hosts:
+      # Damit n8n ein Ollama auf dem Windows-Rechner erreicht:
+      # http://host.docker.internal:11434
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - mcp-server
+    restart: unless-stopped
+
+volumes:
+  n8n_data:

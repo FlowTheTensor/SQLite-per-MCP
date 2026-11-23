@@ -128,7 +128,8 @@ SQLite-per-MCP/
 ├── src/
 │   └── index.py          # Der MCP-Server Code (Python)
 ├── agenten/              # Teil 2: eigener Agenten-Harness + Agenten-Definitionen
-├── docs/agenten/         # Teil 2: Unterrichtsmaterial (Begriffe, Harness, Schnittstellen, Multiagenten, Aufgaben)
+├── docs/agenten/         # Teil 2: Unterrichtsmaterial (Begriffe, Harness, Schnittstellen, Multiagenten, Aufgaben, n8n)
+├── n8n/                  # Teil 2, Kapitel 6: docker-compose.yml + drei n8n-Workflows
 ├── create_database.py    # Script zum Initialisieren der Datenbank
 ├── generate_config.py    # erzeugt die Konfiguration für Claude Desktop
 ├── requirements.txt      # Python Abhängigkeiten

@@ -1,4 +1,5 @@
 {
+  "id": "ycdN74L8TlOePA6t",
   "name": "A – Fester Workflow: Notenstand",
   "nodes": [
     {
@@ -133,7 +134,7 @@
       "parameters": {
         "operation": "completion",
         "respondWith": "showText",
-        "responseText": "={{ (() => { const r = JSON.parse($json.content?.[0]?.text ?? $json.result ?? '[]')[0]; return `<h2>${$('Formular: Klasse und Fach').item.json.Fach} in der ${$('Formular: Klasse und Fach').item.json.Klasse}</h2><p>Durchschnitt: <b>${r.durchschnitt}</b><br>Anzahl Noten: ${r.anzahl}<br>Beste Note: ${r.beste} – schlechteste Note: ${r.schlechteste}</p>`; })() }}"
+        "responseText": "={{ (() => {\n  const form = $('Formular: Klasse und Fach').item.json;\n  // n8n hat den JSON-Text des MCP-Servers schon in eine Liste umgewandelt.\n  // Ist die Antwort ein normaler Text, ist es eine Meldung wie \"Fehler: ...\".\n  const antwort = $json.content[0].text;\n  if (typeof antwort === 'string') return `<p>${antwort}</p>`;\n  const r = antwort[0];\n  return `<h2>${form.Fach} in der ${form.Klasse}</h2><p>Durchschnitt: <b>${r.durchschnitt}</b><br>Anzahl Noten: ${r.anzahl}<br>Beste Note: ${r.beste} – schlechteste Note: ${r.schlechteste}</p>`;\n})() }}"
       },
       "id": "4df82ce6-39bb-4d2b-b03b-e0e853593974",
       "name": "Ergebnis anzeigen",

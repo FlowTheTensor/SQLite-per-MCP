@@ -1,4 +1,5 @@
 {
+  "id": "qDQ4WVFWjVPyfv2U",
   "name": "C – Workflow mit Freigabe: Note eintragen",
   "nodes": [
     {
@@ -207,7 +208,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Ergebnis des MCP-Servers (Text mit JSON) in Felder umwandeln\nconst form = $('Formular: Note eintragen').first().json;\nconst text = $input.first().json.content?.[0]?.text ?? $input.first().json.result ?? '[]';\nlet treffer = [];\ntry { treffer = JSON.parse(text); } catch (e) { treffer = []; }\nconst t = treffer[0] || {};\nreturn [{ json: {\n  anzahl: treffer.length,\n  schueler_id: t.schueler_id, kurs_id: t.kurs_id,\n  name: `${t.vorname ?? ''} ${t.nachname ?? ''}`.trim(),\n  klasse: form.Klasse, fach: form.Fach,\n  note: Number(form.Note), art: form.Art,\n  kandidaten: treffer.map(x => `${x.vorname} ${x.nachname}`).join(', ')\n} }];"
+        "jsCode": "// Ergebnis des MCP-Servers in einfache Felder umwandeln\nconst form = $('Formular: Note eintragen').first().json;\n\n// n8n hat den JSON-Text schon in eine Liste umgewandelt.\n// Kommt ein normaler Text zurück, ist es eine Meldung wie \"Fehler: ...\".\nconst antwort = $input.first().json.content[0].text;\nconst treffer = Array.isArray(antwort) ? antwort : [];\nconst fehler = typeof antwort === 'string' ? antwort : '';\n\nconst t = treffer[0] || {};\nreturn [{ json: {\n  anzahl: treffer.length,\n  fehler,\n  schueler_id: t.schueler_id, kurs_id: t.kurs_id,\n  name: `${t.vorname ?? ''} ${t.nachname ?? ''}`.trim(),\n  klasse: form.Klasse, fach: form.Fach,\n  note: Number(form.Note), art: form.Art,\n  kandidaten: treffer.map(x => `${x.vorname} ${x.nachname}`).join(', ')\n} }];"
       },
       "id": "37ef4052-ef0d-479e-b940-18f867dd1c27",
       "name": "Treffer auswerten",
@@ -347,7 +348,7 @@
         "operation": "completion",
         "respondWith": "text",
         "completionTitle": "Erledigt",
-        "completionMessage": "={{ $json.content?.[0]?.text ?? JSON.stringify($json) }}",
+        "completionMessage": "={{ $json.content[0].text }}",
         "options": {}
       },
       "id": "b0ba898f-4bdc-4cd5-b581-0fcddbe05cca",
@@ -383,7 +384,7 @@
         "operation": "completion",
         "respondWith": "text",
         "completionTitle": "Nicht eindeutig",
-        "completionMessage": "={{ $json.anzahl === 0 ? 'Kein passender Schüler gefunden.' : 'Mehrere Treffer: ' + $json.kandidaten + '. Bitte genauer angeben.' }}",
+        "completionMessage": "={{ $json.fehler ? $json.fehler : $json.anzahl === 0 ? 'Kein passender Schüler gefunden.' : 'Mehrere Treffer: ' + $json.kandidaten + '. Bitte genauer angeben.' }}",
         "options": {}
       },
       "id": "03750d8c-d8fa-4174-bfe5-c51f4330a552",

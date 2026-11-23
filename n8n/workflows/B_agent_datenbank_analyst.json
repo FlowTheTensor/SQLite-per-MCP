@@ -1,4 +1,5 @@
 {
+  "id": "EDFeeBTuCIuxdXwS",
   "name": "B – Agent: Datenbank-Analyst",
   "nodes": [
     {
@@ -146,6 +147,7 @@
     {
       "parameters": {
         "endpointUrl": "http://mcp-server:8000/mcp",
+        "serverTransport": "httpStreamable",
         "include": "selected",
         "includeTools": [
           "list_tables",

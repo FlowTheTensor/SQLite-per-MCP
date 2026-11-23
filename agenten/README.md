@@ -17,6 +17,7 @@ In diesem Teil bauen wir dieses Programm – den **Harness** – selbst nach. So
 | [3 · Mensch-Maschine-Schnittstellen](../docs/agenten/03_mensch_maschine.md) | S0–S5, Autonomiestufen, Verantwortung |
 | [4 · Multiagentensysteme](../docs/agenten/04_multiagenten.md) | Koordinator & Spezialisten, Muster, Vor- und Nachteile |
 | [5 · Aufgaben](../docs/agenten/05_aufgaben.md) | vom Rollenspiel bis zum eigenen Agenten-Team |
+| [6 · Derselbe Agent in n8n](../docs/agenten/06_n8n.md) | n8n als zweiter Harness (Docker): Workflow vs. Agent, Freigabe per Formular |
 
 ## Schnellstart
 
