@@ -4,9 +4,9 @@
 
 In Teil 1 hat der MCP-Server immer **Text** zurückgegeben, meistens JSON. Claude hat daraus eine Antwort formuliert. Das funktioniert, hat aber Grenzen:
 
-- Eine Notenübersicht mit 17 Schülern ist als Text unübersichtlich.
+- Eine Notenübersicht für eine ganze Klasse ist als Text unübersichtlich.
 - Will man eine andere Klasse sehen, muss man wieder fragen, und das LLM muss wieder ein Tool aufrufen.
-- Beim schreibenden Tool `add_grade` fragt Claude Desktop zwar um Erlaubnis, zeigt dabei aber nur `schueler_id: 37, kurs_id: 12`. Wer ist das?
+- Beim schreibenden Tool `add_grade` fragt Claude Desktop zwar um Erlaubnis, zeigt dabei aber nur `schueler_id: 9, kurs_id: 6`. Wer ist das?
 
 **MCP Apps** lösen das. Seit Januar 2026 ist das die erste offizielle Erweiterung von MCP, gemeinsam entwickelt von Anthropic und OpenAI. Ein MCP-Server kann damit zu einem Tool eine **HTML-Seite** mitliefern. Der Host (z. B. Claude Desktop) zeigt sie **direkt im Chat** an.
 
@@ -58,14 +58,14 @@ sequenceDiagram
     Note over A: Tabelle und Diagramm erscheinen im Chat
 
     rect rgb(245, 214, 245)
-    M->>A: wählt Klasse 8b aus
-    A->>H: tools/call notenuebersicht(8b, Mathematik)
+    M->>A: wählt Klasse 5a aus
+    A->>H: tools/call notenuebersicht(5a, Mathematik)
     H->>S: tools/call
     S-->>H: neue Daten
     H-->>A: neue Daten
     Note over L: Das LLM ist an diesem Teil NICHT beteiligt!
     end
-    A->>H: updateModelContext("Der Mensch sieht jetzt 8b")
+    A->>H: updateModelContext("Der Mensch sieht jetzt 5a")
 ```
 
 Zwei Dinge sind neu:
@@ -73,7 +73,7 @@ Zwei Dinge sind neu:
 1. **Der Host holt eine Ressource und zeigt sie an.** Die HTML-Seite läuft in einem abgeschotteten Rahmen (*sandboxed iframe*). Sie kann nicht auf den Rest von Claude Desktop zugreifen.
 2. **Die App kann selbst Tools aufrufen.** Der rosa Bereich im Diagramm läuft komplett **ohne LLM**: Der Mensch klickt, die App fragt über den Host den Server, die Anzeige ändert sich. Das ist schneller, kostet keine Tokens und ist vorhersagbar, wie ein Workflow.
 
-Damit das LLM trotzdem weiß, was der Mensch gerade sieht, kann die App ihm mit `updateModelContext` still eine Notiz schicken. Fragst du danach im Chat „Wer ist hier am besten?“, weiß Claude, dass die 8b gemeint ist.
+Damit das LLM trotzdem weiß, was der Mensch gerade sieht, kann die App ihm mit `updateModelContext` still eine Notiz schicken. Fragst du danach im Chat „Wer ist hier am besten?“, weiß Claude, dass die 5a gemeint ist.
 
 ### Ist eine MCP-App ein Tunnel zum Server?
 
@@ -129,7 +129,7 @@ Gibt es den Nachnamen mehrmals, wählt **der Mensch** die richtige Person aus ei
 
 | | Freigabe von Claude Desktop (Teil 1) | Freigabe-App (Teil 1b) |
 |---|---|---|
-| Was sieht der Mensch? | Toolname und Rohdaten: `{"schueler_id": 76, "kurs_id": 23, ...}` | „Clara Bauer, 7a, Mathematik, 2.3 (Schulaufgabe)“ |
+| Was sieht der Mensch? | Toolname und Rohdaten: `{"schueler_id": 9, "kurs_id": 6, ...}` | „Clara Bauer, 7a, Mathematik, 2.3 (Schulaufgabe)“ |
 | Mehrere Treffer? | Das LLM rät, wer gemeint ist. | Der Mensch wählt aus. |
 | Wer drückt den Knopf? | der Mensch | der Mensch, aber er weiß, *was* er freigibt |
 

@@ -63,7 +63,7 @@ python agenten/agent.py --agent datenbank-analyst --modell mensch "Wie viele Leh
 ## Phase D · Mensch-Maschine-Schnittstellen erleben
 
 ```powershell
-python agenten/agent.py --agent notenverwalter --modell mensch "Trage für Max Müller aus der 7a eine mündliche 2 in Mathe ein."
+python agenten/agent.py --agent notenverwalter --modell mensch "Trage für Werner aus der 7a eine mündliche 2 in Mathe ein."
 ```
 
 1. Spiele das LLM so, dass es zuerst mit `frage_mensch` nachfragt. Welche Schnittstelle (S0–S5) ist das?

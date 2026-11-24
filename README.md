@@ -147,7 +147,7 @@ Die Datenbank `schule.db` enthält vier Tabellen:
 
 ### 1. **schueler**
 - Enthält Informationen über Schüler (Name, Klasse, Geburtsdatum, Email)
-- 12 Klassen (5a–10b) mit je 17 Schülern, also 204 Schüler (Namen werden zufällig erzeugt)
+- 22 erfundene Schüler aus mehreren Klassen (z. B. 7a mit 5 Schülern, 10a mit 6, 10b mit 4)
 
 ### 2. **lehrer**
 - Informationen über Lehrer (Name, zwei Fächer, Raum)
@@ -155,10 +155,12 @@ Die Datenbank `schule.db` enthält vier Tabellen:
 
 ### 3. **kurse**
 - Ein Kurs = ein Fach in einer Klasse mit einer Lehrkraft
-- Fächer: Deutsch, Englisch, Mathematik, Informatik, Sport
+- 8 Kurse in den Fächern Deutsch, Englisch, Mathematik, Informatik, Sport
 
 ### 4. **noten**
-- Pro Schüler und Kurs 2 Schulaufgaben und 3 mündliche Noten
+- 40 Noten (Schulaufgaben und mündlich)
+
+Die Daten sind fest vorgegeben und identisch mit der Browser-Simulation der Lernsituation LS-KI-Agenten. `python create_database.py` setzt die Datenbank jederzeit auf diesen Stand zurück.
 
 # Installationsanleitung: SQLite MCP Server (FastMCP)
 

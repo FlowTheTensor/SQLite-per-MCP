@@ -74,7 +74,7 @@ Eine Freigabe-Frage ist nur dann sinnvoll, wenn der Mensch sie **verstehen** und
 
 ```
 ⚠ FREIGABE NÖTIG: Agent 'notenverwalter' möchte 'add_grade' aufrufen mit
-  {"schueler_id": 37, "kurs_id": 12, "note": 2.0, "art": "mündlich"}
+  {"schueler_id": 9, "kurs_id": 6, "note": 2.0, "art": "mündlich"}
 ```
 
 Diskussionsfrage: Weißt du hier, *welcher* Schüler und *welches* Fach gemeint ist? Wie müsste die Freigabe aussehen, damit du sie verantwortungsvoll erteilen kannst?

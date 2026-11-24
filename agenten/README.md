@@ -64,7 +64,7 @@ Weitere Optionen:
 [MCP    ] tools/call → query_database
 [MCP    ] Ergebnis: [{"COUNT(*)": 17}]
 [HARNESS] Schritt 2/10: sende 3 Nachricht(en) + 3 Tool(s) an das LLM …
-[LLM    ] Die Klasse 7a hat 17 Schüler.
+[LLM    ] Die Klasse 7a hat 5 Schüler.
 [AGENT  ] ■ Agent 'datenbank-analyst' ist fertig (2 Schritt(e)).
 ```
 
@@ -98,4 +98,4 @@ agenten/
 - **Lokale Modelle:** Ollama mit `qwen2.5:7b` oder `llama3.1:8b` beherrscht Tool-Aufrufe und läuft auf Rechnern mit ca. 8 GB freiem Arbeitsspeicher. Einzelagenten funktionieren gut; das Multiagenten-Team ist für kleine Modelle oft zu anspruchsvoll – auch das ist ein guter Diskussionsanlass.
 - **Kosten mit der API:** Ein Lauf des Einzelagenten kostet mit `claude-haiku-5-5` Bruchteile eines Cents bis wenige Cent; das Team ein Mehrfaches (siehe Token-Tabelle am Ende jedes Laufs). Ein Ausgabenlimit in der Anthropic-Konsole ist empfehlenswert.
 - **Datenschutz:** Die Datenbank enthält ausschließlich erfundene Daten. Bei `--modell anthropic` werden Abfrageergebnisse an den Anbieter übertragen – mit echten Schülerdaten wäre das nicht zulässig. Guter Gesprächsanlass!
-- **Datenbank zurücksetzen:** `add_grade` verändert `schule.db`. Mit `python create_database.py` wird sie neu erzeugt (mit neuen Zufallsnamen).
+- **Datenbank zurücksetzen:** `add_grade` verändert `schule.db`. Mit `python create_database.py` wird sie auf den Ausgangsstand zurückgesetzt.
