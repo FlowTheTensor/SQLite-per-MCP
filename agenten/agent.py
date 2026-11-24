@@ -23,6 +23,7 @@ Beispiele (im Projektordner, venv aktiviert):
 import argparse
 import asyncio
 import sys
+import webbrowser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -40,6 +41,8 @@ async def main():
     parser.add_argument("--alles-erlauben", action="store_true",
                         help="Keine Freigaben abfragen (höhere Autonomie – nur zum Ausprobieren!)")
     parser.add_argument("--leise", action="store_true", help="HARNESS-Zeilen ausblenden")
+    parser.add_argument("--weg-zeigen", action="store_true",
+                        help="Am Ende den Weg des Laufs als Diagramm im Browser öffnen")
     parser.add_argument("--liste", action="store_true", help="Verfügbare Agenten anzeigen")
     args = parser.parse_args()
 
@@ -58,19 +61,27 @@ async def main():
         protokoll.schreibe("MCP", f"Server bietet an: {', '.join(t['name'] for t in mcp.tools)}")
         harness = Harness(llm, mcp, mensch, protokoll)
 
-        # S1: Auftrag
-        if args.auftrag:
-            auftrag = args.auftrag
-            protokoll.schreibe("MENSCH", f"Auftrag: {auftrag}")
-        else:
-            auftrag = mensch.auftrag_holen()
+        try:
+            # S1: Auftrag
+            if args.auftrag:
+                auftrag = args.auftrag
+                protokoll.schreibe("MENSCH", f"Auftrag: {auftrag}")
+            else:
+                auftrag = mensch.auftrag_holen()
 
-        # Agenten-Schleife starten
-        ergebnis = await harness.starte_agent(args.agent, auftrag)
+            # Agenten-Schleife starten
+            ergebnis = await harness.starte_agent(args.agent, auftrag)
 
-        # S5: Ergebnis
-        mensch.ergebnis_zeigen(ergebnis)
-        harness.verbrauch_anzeigen()
+            # S5: Ergebnis
+            mensch.ergebnis_zeigen(ergebnis)
+            harness.verbrauch_anzeigen()
+        finally:
+            # Den Weg des Laufs als Diagramm speichern – auch nach einem Abbruch mit Strg+C
+            weg_datei = harness.weg.speichern(protokoll.datei)
+            if weg_datei:
+                print(f"\n\033[90mWeg des Laufs als Diagramm: {weg_datei}\033[0m")
+                if args.weg_zeigen:
+                    webbrowser.open(weg_datei.as_uri())
 
 
 if __name__ == "__main__":

@@ -56,7 +56,8 @@ python agenten/agent.py --agent datenbank-analyst --modell mensch "Wie viele Leh
 2. Versuche trotzdem `tool add_grade {...}`. Notiere die Zeile aus dem Protokoll.
 3. Versuche `tool query_database {"query": "DELETE FROM noten"}`. Welche Schutzschicht greift hier – Harness oder MCP-Server?
 4. Öffne die neueste Datei in `agenten/protokolle/`. Finde den vollständigen System-Prompt. Welcher Teil stammt aus der Definitionsdatei, welcher wurde vom Harness ergänzt?
-5. Fülle die Tabelle aus *Kapitel 2* („Aufgaben des Harness“) aus, indem du die Funktionen in `harness/harness.py` suchst.
+5. Öffne die Datei `…_weg.html` desselben Laufs im Browser. Vergleiche das Bild mit der Agenten-Schleife aus *Kapitel 2*: Welcher Kasten entspricht welchem Schritt (Kontext bauen, LLM aufrufen, entscheiden, ausführen, zurückmelden)? Wo sieht man die Schleife?
+6. Fülle die Tabelle aus *Kapitel 2* („Aufgaben des Harness“) aus, indem du die Funktionen in `harness/harness.py` suchst.
 
 ---
 
@@ -79,7 +80,7 @@ python agenten/agent.py --agent notenverwalter --modell mensch "Trage für Werne
 python agenten/agent.py --agent koordinator --modell anthropic "Schreibe eine kurze Zwischenstand-Rückmeldung für die Klasse 10a in Informatik, die ich vor der nächsten Schulaufgabe an alle verschicken kann."
 ```
 
-1. Zeichne ein Sequenzdiagramm: Welcher Agent wurde wann von wem beauftragt?
+1. Zeichne ein Sequenzdiagramm: Welcher Agent wurde wann von wem beauftragt? Vergleiche deine Zeichnung danach mit dem Weg-Diagramm (`…_weg.html`), das der Harness erstellt hat.
 2. Lies die Aufträge, die der Koordinator an die Unteragenten geschickt hat. Sind sie vollständig, sodass man sie **ohne Vorwissen** verstehen kann?
 3. Hat der Prüfer etwas korrigiert? Wenn nicht: Wie könntet ihr testen, ob er überhaupt funktioniert?
 4. Vergleiche die Token-Tabelle am Ende mit einem Lauf von `datenbank-analyst` allein. Um welchen Faktor war das Team teurer?
@@ -103,7 +104,8 @@ python agenten/agent.py --agent koordinator --modell anthropic "Schreibe eine ku
 1. **Bessere Freigabe:** Ändere `Mensch.freigabe()` so, dass statt `schueler_id: 37` der Name des Schülers und das Fach angezeigt werden. (Tipp: Der Harness kann vor der Freigabe selbst eine `SELECT`-Abfrage über `self.mcp` ausführen.)
 2. **Budget:** Ergänze den Harness um ein Token-Budget: Überschreitet ein Lauf z. B. 20 000 Tokens, bricht er ab (S4).
 3. **Neues Tool:** Ergänze in `src/index.py` ein Tool `average_grade(schueler_id, fach)`. Muss es freigegeben werden? Begründe.
-4. **Parallele Agenten:** Ändere den Harness so, dass mehrere `delegiere_an_...`-Aufrufe in einem Schritt mit `asyncio.gather` gleichzeitig laufen.
+4. **Weg erweitern:** Der Weg (`harness/weg.py`) zeigt bisher nur Tool-*Namen* und Argumente. Ergänze, dass bei jedem Tool-Kasten auch eine Kurzfassung des Ergebnisses erscheint. Welche Stelle in `harness.py` muss dafür `weg.py` etwas melden?
+5. **Parallele Agenten:** Ändere den Harness so, dass mehrere `delegiere_an_...`-Aufrufe in einem Schritt mit `asyncio.gather` gleichzeitig laufen.
 
 ---
 

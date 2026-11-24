@@ -60,6 +60,7 @@ Vergleiche `agenten/minimal_agent.py` mit `agenten/harness/harness.py`. Dem Mini
 | **Rückfragen ermöglichen** | nein | Harness-eigenes Tool `frage_mensch` | `FRAGE_MENSCH_TOOL` |
 | **Grenzen** | Endlosschleife möglich | `max_schritte` | `starte_agent()` |
 | **Protokoll** | ein paar `print`s | farbiges Protokoll + JSONL-Datei | `protokoll.py` |
+| **Weg als Bild** | nein | Mermaid-Diagramm jedes Laufs | `weg.py` |
 | **Kosten messen** | nein | Tokens pro Agent | `verbrauch_anzeigen()` |
 | **Delegation** an andere Agenten | nein | `delegiere_an_...` | `delegations_tool()` |
 

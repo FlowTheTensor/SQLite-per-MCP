@@ -14,6 +14,9 @@ Das ist die berühmte AGENTEN-SCHLEIFE (agent loop).
 
 Merke: Berechtigungen werden HIER im Code erzwungen – nicht durch den Prompt.
 Ein LLM kann man überreden, ein Programm nicht.
+
+Nebenbei meldet der Harness jeden Schritt an self.weg (siehe weg.py).
+Daraus entsteht am Ende ein Bild, welchen Weg der Lauf durch die Schleife genommen hat.
 """
 
 import asyncio
@@ -22,6 +25,7 @@ from datetime import date
 
 from .definition import AgentDefinition, lade_definition
 from .protokoll import kuerzen
+from .weg import Weg
 
 # Tools, die nicht vom MCP-Server kommen, sondern vom Harness selbst
 FRAGE_MENSCH_TOOL = {
@@ -56,6 +60,7 @@ class Harness:
         self.mensch = mensch
         self.protokoll = protokoll
         self.verbrauch = {}  # Tokens pro Agent
+        self.weg = Weg()     # zeichnet den Weg des Laufs als Diagramm auf
 
     # ------------------------------------------------------------------
     # Schritt 1: Kontext bauen
@@ -86,8 +91,10 @@ class Harness:
     # ------------------------------------------------------------------
     # Die Agenten-Schleife
     # ------------------------------------------------------------------
-    async def starte_agent(self, name: str, auftrag: str, tiefe: int = 0) -> str:
+    async def starte_agent(self, name: str, auftrag: str, tiefe: int = 0, eltern: int | None = None) -> str:
+        # eltern: Abschnitt des beauftragenden Agenten im Weg-Diagramm (None = Auftrag vom Menschen)
         d = lade_definition(name)
+        a = self.weg.agent(d.name, auftrag, eltern)  # a = Nummer dieses Agenten im Weg-Diagramm
         tools = self._tools_fuer(d, tiefe)
         system = self._system_prompt(d)
         nachrichten = [{"role": "user", "content": auftrag}]
@@ -103,6 +110,7 @@ class Harness:
                            f"+ {len(tools)} Tool(s) an das LLM …", tiefe)
             antwort = await asyncio.to_thread(self.llm.antworte, system, nachrichten, tools)
             self._zaehle(d.name, antwort.get("verbrauch", {}))
+            self.weg.llm(a, schritt)
 
             if antwort["text"]:
                 self.protokoll.schreibe("LLM", antwort["text"], tiefe)
@@ -111,6 +119,7 @@ class Harness:
             # Keine Tool-Wünsche mehr -> der Agent ist fertig
             if not antwort["tool_calls"]:
                 self.protokoll.schreibe("AGENT", f"■ Agent '{d.name}' ist fertig ({schritt} Schritt(e)).", tiefe)
+                self.weg.fertig(a)
                 return antwort["text"]
 
             # Schritte 3–5: jeden Tool-Wunsch prüfen, ausführen, zurückmelden
@@ -118,47 +127,51 @@ class Harness:
                 self.protokoll.schreibe(
                     "LLM", f"möchte Tool '{aufruf['name']}' mit {json.dumps(aufruf['arguments'], ensure_ascii=False)}",
                     tiefe)
-                ergebnis = await self._fuehre_aus(d, aufruf, tiefe)
+                ergebnis = await self._fuehre_aus(d, aufruf, tiefe, a)
                 nachrichten.append({"role": "tool", "tool_call_id": aufruf["id"],
                                     "name": aufruf["name"], "content": ergebnis})
 
         # S4: Schrittlimit als Notbremse
         meldung = f"Abbruch durch den Harness: Schrittlimit von {d.max_schritte} erreicht."
         self.protokoll.schreibe("FEHLER", meldung, tiefe)
+        self.weg.fertig(a, schrittlimit=True)
         return meldung
 
     # ------------------------------------------------------------------
     # Schritte 3 + 4: Berechtigung prüfen und ausführen
     # ------------------------------------------------------------------
-    async def _fuehre_aus(self, d: AgentDefinition, aufruf: dict, tiefe: int) -> str:
+    async def _fuehre_aus(self, d: AgentDefinition, aufruf: dict, tiefe: int, a: int) -> str:
         name, argumente = aufruf["name"], aufruf["arguments"]
 
         # a) Rückfrage an den Menschen (S3)
         if name == "frage_mensch" and d.mensch_fragen:
+            self.weg.rueckfrage(a, argumente.get("frage", ""))
             return await asyncio.to_thread(self.mensch.rueckfrage, d.name, argumente.get("frage", ""), tiefe)
 
         # b) Delegation an einen anderen Agenten (Multiagentensystem)
         if name.startswith("delegiere_an_"):
             ziel = name.removeprefix("delegiere_an_")
             if ziel not in d.delegiert_an:
-                return self._verweigert(d, name, tiefe)
-            ergebnis = await self.starte_agent(ziel, argumente.get("auftrag", ""), tiefe + 1)
+                return self._verweigert(d, name, tiefe, a)
+            ergebnis = await self.starte_agent(ziel, argumente.get("auftrag", ""), tiefe + 1, eltern=a)
             self.protokoll.schreibe("HARNESS", f"Ergebnis von '{ziel}' geht zurück an '{d.name}'.", tiefe)
             return ergebnis
 
         # c) MCP-Tool ohne Nachfrage
         if name in d.tools:
+            self.weg.tool(a, name, argumente)
             return await self._mcp(name, argumente, tiefe)
 
         # d) MCP-Tool mit Freigabe durch den Menschen (S2)
         if name in d.tools_mit_freigabe:
             erlaubt, grund = await asyncio.to_thread(self.mensch.freigabe, d.name, name, argumente, tiefe)
+            self.weg.tool(a, name, argumente, freigabe=erlaubt)
             if not erlaubt:
                 return f"Der Mensch hat den Aufruf von '{name}' ABGELEHNT. Begründung: {grund or 'keine'}"
             return await self._mcp(name, argumente, tiefe)
 
         # e) Alles andere ist verboten – egal, was das LLM will
-        return self._verweigert(d, name, tiefe)
+        return self._verweigert(d, name, tiefe, a)
 
     async def _mcp(self, name: str, argumente: dict, tiefe: int) -> str:
         self.protokoll.schreibe("MCP", f"tools/call → {name}", tiefe)
@@ -166,7 +179,8 @@ class Harness:
         self.protokoll.schreibe("MCP", f"Ergebnis: {kuerzen(ergebnis)}", tiefe, daten=ergebnis)
         return ergebnis
 
-    def _verweigert(self, d: AgentDefinition, name: str, tiefe: int) -> str:
+    def _verweigert(self, d: AgentDefinition, name: str, tiefe: int, a: int) -> str:
+        self.weg.tool(a, name, blockiert=True)
         self.protokoll.schreibe("FEHLER", f"Harness blockiert: '{d.name}' darf '{name}' nicht benutzen.", tiefe)
         return f"Fehler: Du hast keine Berechtigung für das Tool '{name}'."
 

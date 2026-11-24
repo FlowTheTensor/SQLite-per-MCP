@@ -53,6 +53,7 @@ Weitere Optionen:
 | `--url URL` | anderer OpenAI-kompatibler Server (LM Studio, OpenAI, Schulserver …) |
 | `--alles-erlauben` | keine Freigaben mehr (Autonomiestufe 3 – zum Ausprobieren) |
 | `--leise` | `[HARNESS]`-Zeilen ausblenden |
+| `--weg-zeigen` | am Ende den Weg des Laufs als Diagramm im Browser öffnen |
 
 ## So liest du die Ausgabe
 
@@ -70,6 +71,35 @@ Weitere Optionen:
 
 Jede Zeile sagt dir, **wer** gerade handelt. Unteragenten erscheinen eingerückt mit `│`.
 Das vollständige Protokoll (inkl. System-Prompts und ungekürzter Ergebnisse) liegt in `agenten/protokolle/`.
+
+## Den Weg als Bild ansehen
+
+Nach jedem Lauf speichert der Harness zusätzlich den **Weg durch die Agenten-Schleife** als Diagramm:
+
+- `agenten/protokolle/lauf_…_weg.html`: im Browser öffnen (oder gleich mit `--weg-zeigen` starten)
+- `agenten/protokolle/lauf_…_weg.md`: dasselbe Diagramm als [Mermaid](https://mermaid.js.org)-Text, z. B. für GitHub oder [mermaid.live](https://mermaid.live)
+
+```mermaid
+flowchart TD
+    k1(["👤 Auftrag:<br/>Trage Max eine 2 ein"]):::mensch
+    subgraph a0["🤖 Agent notenverwalter"]
+        k2["🧠 LLM · Schritt 1"]:::llm
+        k3["🔧 query_database<br/>SELECT schueler_id FROM …"]:::mcp
+        k4["🧠 LLM · Schritt 2"]:::llm
+        k5{"👤 Freigabe?<br/>add_grade"}:::mensch
+        k6["🔧 add_grade<br/>37 4 2 mündlich"]:::mcp
+        k7["🧠 LLM · Schritt 3"]:::llm
+    end
+    k8(["✅ Ergebnis an den Menschen"]):::mensch
+    k1 --> k2 --> k3 --> k4 --> k5 -->|ja| k6 --> k7 --> k8
+    classDef llm fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef mcp fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef mensch fill:#fae8ff,stroke:#c026d3,color:#701a75
+```
+
+Die Farben entsprechen den Etiketten in der Konsole. Jeder Agent bekommt einen eigenen Kasten, Delegationen erscheinen als Pfeile *delegiert* und *Ergebnis*.
+Rote Kästen zeigen, wo der Harness eingegriffen hat (blockiertes Tool, Schrittlimit).
+Die HTML-Datei lädt nur das Zeichenprogramm mermaid.js aus dem Internet. Das Bild entsteht im Browser, die Daten des Laufs verlassen den Rechner nicht.
 
 ## Dateien
 
@@ -89,7 +119,8 @@ agenten/
     ├── mcp_bruecke.py     # MCP-Client: tools/list und tools/call
     ├── mensch.py          # alle Mensch-Maschine-Schnittstellen an einem Ort
     ├── definition.py      # liest die Definitionsdateien
-    └── protokoll.py       # farbige Ausgabe + JSONL-Protokoll
+    ├── protokoll.py       # farbige Ausgabe + JSONL-Protokoll
+    └── weg.py             # Weg des Laufs als Mermaid-Diagramm
 ```
 
 ## Hinweise für Lehrkräfte
