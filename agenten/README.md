@@ -42,7 +42,7 @@ python agenten/agent.py --agent datenbank-analyst --modell ollama "Welche Klasse
 python agenten/agent.py --agent notenverwalter --modell anthropic
 
 # Multiagentensystem
-python agenten/agent.py --agent koordinator --modell anthropic "Kurzer Text für den Elternabend der 7a zum Notenstand in Mathe"
+python agenten/agent.py --agent koordinator --modell anthropic "Kurze Zwischenstand-Rückmeldung für die Klasse 10a in Informatik vor der nächsten Schulaufgabe"
 ```
 
 Weitere Optionen:

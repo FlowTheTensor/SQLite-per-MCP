@@ -14,7 +14,7 @@ Beispiele (im Projektordner, venv aktiviert):
     python agenten/agent.py --agent notenverwalter --modell anthropic
 
     # Multiagentensystem: der Koordinator verteilt Arbeit an andere Agenten
-    python agenten/agent.py --agent koordinator --modell anthropic "Bericht Mathe-Noten 7a für den Elternabend"
+    python agenten/agent.py --agent koordinator --modell anthropic "Zwischenstand Informatik 10a als Rückmeldung an die Klasse"
 
     # Welche Agenten gibt es?
     python agenten/agent.py --liste

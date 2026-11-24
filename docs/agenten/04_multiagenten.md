@@ -42,12 +42,12 @@ graph TB
 | `koordinator` | zerlegt den Auftrag, verteilt, fasst zusammen | **nein** | Er soll planen, nicht selbst rechnen. |
 | `datenbank-analyst` | holt Fakten per SQL | lesen | Spezialist für SQL |
 | `pruefer` | prüft Zahlen unabhängig nach | lesen | **Vier-Augen-Prinzip** |
-| `berichtsautor` | schreibt Text für Eltern | **nein** | Kann keine Daten „nachschlagen“ und dabei Namen preisgeben |
+| `berichtsautor` | schreibt Rückmeldung an die Klasse | **nein** | Kann keine Daten „nachschlagen“ und dabei Namen oder Einzelnoten preisgeben |
 
 Starten:
 
 ```powershell
-python agenten/agent.py --agent koordinator --modell anthropic "Schreibe einen kurzen Text für den Elternabend der 7a über den Notenstand in Mathematik."
+python agenten/agent.py --agent koordinator --modell anthropic "Schreibe eine kurze Zwischenstand-Rückmeldung für die Klasse 10a in Informatik, die ich vor der nächsten Schulaufgabe an alle verschicken kann."
 ```
 
 Im Protokoll siehst du die Unteragenten **eingerückt** (`│`). So erkennst du, welcher Agent gerade arbeitet.

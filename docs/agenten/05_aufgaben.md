@@ -76,14 +76,14 @@ python agenten/agent.py --agent notenverwalter --modell mensch "Trage für Max M
 ## Phase E · Multiagentensystem 🧠
 
 ```powershell
-python agenten/agent.py --agent koordinator --modell anthropic "Schreibe einen kurzen Text für den Elternabend der 7a über den Notenstand in Mathematik."
+python agenten/agent.py --agent koordinator --modell anthropic "Schreibe eine kurze Zwischenstand-Rückmeldung für die Klasse 10a in Informatik, die ich vor der nächsten Schulaufgabe an alle verschicken kann."
 ```
 
 1. Zeichne ein Sequenzdiagramm: Welcher Agent wurde wann von wem beauftragt?
 2. Lies die Aufträge, die der Koordinator an die Unteragenten geschickt hat. Sind sie vollständig, sodass man sie **ohne Vorwissen** verstehen kann?
 3. Hat der Prüfer etwas korrigiert? Wenn nicht: Wie könntet ihr testen, ob er überhaupt funktioniert?
 4. Vergleiche die Token-Tabelle am Ende mit einem Lauf von `datenbank-analyst` allein. Um welchen Faktor war das Team teurer?
-5. Enthält der Elterntext Namen von Schülern? Welche Zeile in welcher Definitionsdatei sorgt dafür?
+5. Enthält die Rückmeldung an die Klasse Namen oder Einzelnoten von Schülern? Welche Zeile in welcher Definitionsdatei sorgt dafür?
 
 > Ohne API-Key: Ihr könnt das Team auch mit `--modell mensch` spielen. Dann übernehmt ihr nacheinander die Rolle *jedes* Agenten – ihr merkt dabei sehr deutlich, dass jeder Agent nur seinen eigenen Kontext sieht.
 
