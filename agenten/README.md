@@ -15,7 +15,7 @@ In diesem Teil bauen wir dieses Programm – den **Harness** – selbst nach. So
 | [1 · Begriffe](../docs/agenten/01_begriffe.md) | LLM, Tool, MCP, Agent, Harness, Workflow vs. Agent |
 | [2 · Der Harness](../docs/agenten/02_harness.md) | Agenten-Schleife, Aufgaben des Harness, Rechte im Code |
 | [3 · Mensch-Maschine-Schnittstellen](../docs/agenten/03_mensch_maschine.md) | S0–S5, Autonomiestufen, Verantwortung |
-| [4 · Multiagentensysteme](../docs/agenten/04_multiagenten.md) | Koordinator & Spezialisten, Muster, Vor- und Nachteile |
+| [4 · Multiagentensysteme](../docs/agenten/04_multiagenten.md) | Koordinator & Spezialisten, Muster, Vor- und Nachteile, warum kein A2A |
 | [5 · Aufgaben](../docs/agenten/05_aufgaben.md) | vom Rollenspiel bis zum eigenen Agenten-Team |
 | [6 · Derselbe Agent in n8n](../docs/agenten/06_n8n.md) | n8n als zweiter Harness (Docker): Workflow vs. Agent, Freigabe per Formular |
 
@@ -54,6 +54,54 @@ Weitere Optionen:
 | `--alles-erlauben` | keine Freigaben mehr (Autonomiestufe 3 – zum Ausprobieren) |
 | `--leise` | `[HARNESS]`-Zeilen ausblenden |
 | `--weg-zeigen` | am Ende den Weg des Laufs als Diagramm im Browser öffnen |
+
+## Selbst das LLM spielen (`--modell mensch`)
+
+Mit `--modell mensch` bist **du** das Sprachmodell. Der Harness zeigt dir in einem Kasten genau das, was ein echtes LLM bekommen würde: System-Prompt, verfügbare Tools und neue Nachrichten. Danach wartet er bei `LLM>` auf deine Antwort.
+
+Du hast **zwei Möglichkeiten**, genau wie ein echtes LLM:
+
+| Du tippst … | Bedeutung | Was der Harness macht |
+|---|---|---|
+| `tool NAME {json-argumente}` | **Tool-Aufruf:** "Harness, führe dieses Tool für mich aus." | ruft das Tool über MCP auf und zeigt dir das Ergebnis als neue Nachricht `[tool]` |
+| normalen Text (ohne `tool` am Anfang) | **Endantwort:** "Ich bin fertig." | beendet den Agenten und gibt deinen Text als Ergebnis aus |
+
+So ist ein Tool-Aufruf aufgebaut:
+
+- zuerst das Wort `tool`,
+- dann der Name des Tools, **ohne** Klammern,
+- dann die Argumente als JSON. Hat das Tool keine Argumente (wie `list_tables`), lässt du sie weg.
+
+### Beispiel: eine Notenübersicht
+
+```powershell
+python agenten/agent.py --agent datenbank-analyst --modell mensch "Notenübersicht: Durchschnitt pro Klasse und Fach"
+```
+
+Jede Zeile gibst du nach einem eigenen `LLM>` ein. Dazwischen führt der Harness das Tool aus und zeigt dir das Ergebnis.
+
+```text
+LLM> tool list_tables
+LLM> tool describe_table {"table_name": "noten"}
+LLM> tool describe_table {"table_name": "kurse"}
+LLM> tool query_database {"query": "SELECT k.klasse, k.fach, ROUND(AVG(n.note),2) AS schnitt, COUNT(*) AS anzahl FROM noten n JOIN kurse k ON n.kurs_id = k.id GROUP BY k.klasse, k.fach ORDER BY k.klasse, k.fach"}
+LLM> Notenübersicht: 10a Informatik Schnitt 2,05 (12 Noten), 10b Informatik 3,41 (8 Noten), ...  SQL: SELECT k.klasse, ...
+```
+
+Die letzte Zeile beginnt **nicht** mit `tool`. Sie ist deine Endantwort, und damit ist der Lauf beendet.
+
+### Typische Stolpersteine
+
+| Eingabe | Problem |
+|---|---|
+| `list_tables()` oder `{list_tables()}` | Ohne `tool` am Anfang ist das **Text**. Der Harness hält es für deine Endantwort und beendet den Agenten. |
+| `tool list_tables()` | Keine Klammern hinter den Namen. Richtig: `tool list_tables` |
+| `tool describe_table {'table_name': 'noten'}` | JSON braucht **doppelte** Anführungszeichen: `{"table_name": "noten"}` |
+| `tool describe_table noten` | Argumente immer als JSON mit Namen. Die Namen stehen in der Tool-Liste in Klammern, z. B. `describe_table(table_name)`. |
+
+Bei ungültigem JSON bricht der Lauf nicht ab: Der Harness zeigt ein Beispiel und du versuchst es noch einmal.
+
+> 💡 **Darum geht es:** Der Harness *rät* nicht, was du gemeint hast. Er schaut nur auf die **Form** deiner Antwort: Beginnt sie mit `tool`, führt er etwas aus, sonst ist der Lauf zu Ende. Ein echtes LLM muss genau diese Unterscheidung treffen. Bei Claude oder Ollama heißt der Tool-Aufruf intern `tool_calls` (siehe [harness/llm.py](harness/llm.py)).
 
 ## So liest du die Ausgabe
 
@@ -129,4 +177,5 @@ agenten/
 - **Lokale Modelle:** Ollama mit `qwen2.5:7b` oder `llama3.1:8b` beherrscht Tool-Aufrufe und läuft auf Rechnern mit ca. 8 GB freiem Arbeitsspeicher. Einzelagenten funktionieren gut; das Multiagenten-Team ist für kleine Modelle oft zu anspruchsvoll – auch das ist ein guter Diskussionsanlass.
 - **Kosten mit der API:** Ein Lauf des Einzelagenten kostet mit `claude-haiku-5-5` Bruchteile eines Cents bis wenige Cent; das Team ein Mehrfaches (siehe Token-Tabelle am Ende jedes Laufs). Ein Ausgabenlimit in der Anthropic-Konsole ist empfehlenswert.
 - **Datenschutz:** Die Datenbank enthält ausschließlich erfundene Daten. Bei `--modell anthropic` werden Abfrageergebnisse an den Anbieter übertragen – mit echten Schülerdaten wäre das nicht zulässig. Guter Gesprächsanlass!
+- **Kein A2A – mit Absicht:** Das Protokoll A2A (*Agent2Agent*) verbindet Agenten, die verschiedenen Besitzern gehören und als eigene Server laufen. Hier gehören alle Agenten demselben Besitzer und laufen in **einem** Harness. Delegation ist deshalb ein einfacher Funktionsaufruf, und der ganze Ablauf bleibt im Protokoll sichtbar. Ausführlich in [Kapitel 4](../docs/agenten/04_multiagenten.md#und-a2a-warum-wir-es-hier-nicht-verwenden).
 - **Datenbank zurücksetzen:** `add_grade` verändert `schule.db`. Mit `python create_database.py` wird sie auf den Ausgangsstand zurückgesetzt.

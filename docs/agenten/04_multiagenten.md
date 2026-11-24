@@ -99,9 +99,56 @@ Du bist der Koordinator eines kleinen Agenten-Teams ...
 
 Die Zeile `beschreibung` ist wichtig: Sie landet in der Tool-Beschreibung von `delegiere_an_...`. **Daran entscheidet der Koordinator, wen er beauftragt.**
 
+## Und A2A? Warum wir es hier nicht verwenden
+
+In der Praxis taucht bei Multiagentensystemen oft der Begriff **A2A** (*Agent2Agent*) auf. Das ist ein offenes Protokoll, über das Agenten miteinander sprechen. MCP verbindet einen Agenten mit seinen **Tools**, A2A verbindet **Agenten untereinander**.
+
+In diesem Projekt gibt es **kein A2A**, und das ist Absicht.
+
+### Wofür A2A gedacht ist
+
+A2A löst ein bestimmtes Problem: Agenten, die **verschiedenen Besitzern** gehören, sollen zusammenarbeiten. Zum Beispiel läuft ein Agent bei der Schule, ein anderer bei einem Schulbuchverlag, mit anderem Programm, anderem LLM, auf einem anderen Server. Keiner darf in den anderen hineinschauen.
+
+Deshalb ist bei A2A **jeder Agent ein eigener Server mit eigenem Harness**. Er veröffentlicht eine **Agent Card**, eine Visitenkarte im JSON-Format. Darin steht, **was** er kann (seine *Skills*), aber nicht, **womit** er es tut: keine Tools, kein System-Prompt, kein LLM. Andere Agenten schicken ihm Aufträge über das Netz und bekommen Antworten zurück. Mehr erfahren sie nicht.
+
+### Warum wir es nicht brauchen
+
+Bei uns gilt: **ein Harness, ein Besitzer, alle Agenten.**
+
+- Alle Agenten gehören uns, liegen als Dateien in `agenten/definitionen/` und laufen **im selben Python-Programm**.
+- **Ein einziger Harness** spielt alle Agenten nacheinander. Delegieren ist bei uns ein einfacher Funktionsaufruf (`starte_agent(...)` in `harness.py`), keine Nachricht über das Netz.
+- Der Harness darf alle Definitionen kennen, denn es gibt niemanden, vor dem man sie verstecken müsste. Getrennt wird nur das, was die **LLMs** sehen: Jedes bekommt nur seine eigenen Tools.
+
+A2A würde hier nur Aufwand bringen (mehrere Server, Ports, Netzwerkfehler, mehr Arbeitsspeicher), aber nichts Neues über Agenten zeigen. Außerdem würde jeder Agent zur Blackbox. Das Protokoll und das Weg-Diagramm, in denen man den ganzen Ablauf sieht, gingen verloren.
+
+Übrigens arbeiten auch die meisten Multiagentensysteme in der Praxis **so wie unseres**: Claude Code mit Subagents, CrewAI, LangGraph oder n8n mit mehreren Agenten-Knoten. **Multiagentensystem heißt also nicht automatisch A2A.**
+
+### Was bei uns die Rolle von A2A übernimmt
+
+| Bei A2A | Bei uns |
+|---|---|
+| Agent Card mit Skills | die Zeile `beschreibung` in der Definitionsdatei |
+| Auftrag als Nachricht über das Netz | Tool `delegiere_an_...` → Funktionsaufruf im Harness |
+| jeder Agent hat seinen eigenen Harness | ein gemeinsamer Harness für alle |
+| niemand sieht in einen anderen Agenten hinein | der Harness sieht alles, nur die LLMs sehen getrennte Ausschnitte |
+| Tools werden nicht weitergegeben | Tools werden nicht weitergegeben |
+
+### Wann man A2A bräuchte
+
+Die Frage ist immer: **Stecken die Agenten im selben Programm oder nicht?** Dasselbe kennst du schon von MCP aus Kapitel 6:
+
+| | Agent ↔ Tool | Agent ↔ Agent |
+|---|---|---|
+| **im selben Programm** | Funktionsaufruf | `delegiere_an_...` in unserem Harness |
+| **über Systemgrenzen** | **MCP über HTTP** (n8n → `src/index.py`) | **A2A** |
+
+n8n läuft in einem eigenen Container und kann `src/index.py` nicht selbst starten, deshalb braucht es MCP über HTTP. Genauso bräuchten Agenten A2A, sobald sie nicht mehr in einem gemeinsamen Harness stecken, weil sie anderen Besitzern gehören oder unabhängig voneinander laufen sollen.
+
 ## Kontrollfragen
 
 1. Warum bekommt der Koordinator *keinen* Datenbankzugriff, obwohl das schneller wäre?
 2. Der Analyst liefert „Der Schnitt ist 2,9“. Der Koordinator gibt an den Autor nur „Schreib was über den Schnitt“ weiter. Was geht schief?
 3. Vergleiche die Token-Zahlen eines Laufs mit `datenbank-analyst` allein und mit `koordinator`. Erkläre den Unterschied.
 4. Welches Muster würdest du für „Erstelle für jede der 12 Klassen eine Notenübersicht“ wählen?
+5. Stell dir vor, der `datenbank-analyst` soll als eigener A2A-Server laufen. Welche Felder aus `datenbank-analyst.md` dürften in seine öffentliche Agent Card, welche auf keinen Fall? Begründe.
+6. Warum braucht unser Projekt kein A2A, n8n aber MCP über HTTP?

@@ -40,7 +40,19 @@ FRAGE_MENSCH_TOOL = {
 
 
 def delegations_tool(ziel: AgentDefinition) -> dict:
-    """Für Multiagentensysteme: Ein anderer Agent wird dem LLM als 'Tool' angeboten."""
+    """Für Multiagentensysteme: Ein anderer Agent wird dem LLM als 'Tool' angeboten.
+
+    Das LLM erfährt vom anderen Agenten nur Name und 'beschreibung', also WAS er kann.
+    Seine Tools, seinen System-Prompt usw. sieht es nicht.
+
+    Warum kein A2A (Agent2Agent-Protokoll)?
+    A2A ist für Agenten gedacht, die verschiedenen Besitzern gehören und als eigene
+    Server laufen. Dort beschreibt eine "Agent Card" übers Netz, was ein Agent kann.
+    Bei uns gehören alle Agenten demselben Besitzer und laufen in DIESEM einen Harness.
+    Delegieren ist daher nur ein Funktionsaufruf (siehe _fuehre_aus, Teil b),
+    und 'beschreibung' übernimmt die Rolle der Agent Card.
+    Mehr dazu: docs/agenten/04_multiagenten.md, Abschnitt "Und A2A?"
+    """
     return {
         "name": f"delegiere_an_{ziel.name}",
         "description": f"Gibt eine Teilaufgabe an den Agenten '{ziel.name}' ab. {ziel.beschreibung} "

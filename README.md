@@ -355,3 +355,5 @@ Bisher hat der MCP-Server nur Text zurückgegeben.
 Claude Desktop hat in diesen Teilen vieles für dich erledigt, ohne dass du es gesehen hast: Es hat das LLM aufgerufen, die Tools ausgewählt, die Ergebnisse zurückgegeben, Oberflächen angezeigt und dich um Erlaubnis gefragt. Genau dieses Programm nennt man **Harness**.
 
 ➡️ **[Teil 2: Agenten & Multiagentensysteme](agenten/README.md)** – dort baust du einen Harness selbst nach, spielst selbst das LLM und lässt mehrere Agenten zusammenarbeiten.
+
+> 💡 **Und A2A?** Bei Multiagentensystemen begegnet dir oft das Protokoll **A2A** (*Agent2Agent*). MCP verbindet einen Agenten mit seinen Tools, A2A verbindet Agenten miteinander, und zwar solche, die **verschiedenen Besitzern** gehören und auf eigenen Servern laufen. In diesem Projekt gehören alle Agenten demselben Besitzer und laufen in **einem gemeinsamen Harness**. Deshalb brauchen wir kein A2A. Warum das so ist, steht in [Kapitel 4: Multiagentensysteme](docs/agenten/04_multiagenten.md#und-a2a-warum-wir-es-hier-nicht-verwenden).
