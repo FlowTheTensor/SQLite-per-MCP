@@ -208,6 +208,7 @@ HILFE = [
              "  Tool-Knöpfe       Vorlage ins LLM-Feld einfügen\n"
              "  Klick auf ein Beispiel hier in der Hilfe  → landet im LLM-Feld des Agenten, der dran ist\n"
              "  ⏹ Abbrechen       (Hauptfenster) stoppt den Lauf – wie Strg+C im Terminal, Schnittstelle S4\n"
+             "  ⏻ Beenden         (jedes Fenster) schließt das ganze Programm – auch mitten im Lauf\n"
              "  Im Terminal läuft das ausführliche Protokoll des Harness mit."),
 ]
 
@@ -556,6 +557,8 @@ class AgentFenster:
         kopf.pack(fill="x")
         tk.Label(kopf, text=f"🤖 {self.name}", font=("Segoe UI", 15, "bold"), fg=self.farbe,
                  bg=FARBEN["hintergrund"]).pack(side="left")
+        tk.Button(kopf, text="⏻ Beenden", relief="groove", bg="#f8d7da",
+                  command=self.haupt.beenden).pack(side="right", padx=4)
         tk.Button(kopf, text="❓ Hilfe", font=SCHRIFT_FETT, bg="#fff3cd", relief="groove",
                   command=self.haupt.hilfe_oeffnen).pack(side="right", padx=4)
         self.status = tk.Label(kopf, text="", font=SCHRIFT_FETT, bg=FARBEN["hintergrund"])
@@ -825,6 +828,8 @@ class HauptFenster:
         tk.Label(leiste, text="👤 Mensch  ·  ⚙ Harness", font=("Segoe UI", 13, "bold"),
                  fg=FARBEN["mensch_rand"], bg=FARBEN["hintergrund"]).pack(side="left")
 
+        tk.Button(leiste, text="⏻ Beenden", relief="groove", bg="#f8d7da",
+                  command=self.beenden).pack(side="right", padx=4)
         tk.Button(leiste, text="❓ Hilfe: So spielst du das LLM", font=SCHRIFT_FETT, bg="#fff3cd",
                   relief="groove", padx=10, command=self.hilfe_oeffnen).pack(side="right", padx=4)
         self.knopf_neu = tk.Button(leiste, text="↻ Neuer Lauf", command=self._neuer_lauf, relief="groove")
@@ -1214,6 +1219,22 @@ class HauptFenster:
 
     def _status(self, text: str):
         self.status.configure(text=text)
+
+    def beenden(self):
+        """Knopf ⏻ Beenden (Hauptfenster und jedes Agenten-Fenster): das ganze Programm beenden.
+
+        Läuft gerade ein Lauf, wird vorher nachgefragt – sonst wäre die bisherige Arbeit weg.
+        """
+        try:  # die Frage soll über dem Fenster erscheinen, in dem geklickt wurde
+            fenster = self.root.focus_get().winfo_toplevel()
+        except Exception:
+            fenster = self.root
+        if self.lauf_aktiv and not messagebox.askyesno(
+                "Programm beenden?",
+                "Ein Lauf ist noch nicht fertig.\n\nTrotzdem beenden? Der Lauf wird dann abgebrochen.",
+                icon="warning", parent=fenster):
+            return
+        self._schliessen()
 
     def _schliessen(self):
         if self.lauf_aktiv:
