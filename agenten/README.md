@@ -28,7 +28,8 @@ Voraussetzung: Teil 1 ist eingerichtet (venv aktiv, `schule.db` erstellt). Es we
 python agenten/agent.py --liste
 
 # 1) Du spielst selbst das LLM – kostenlos, ohne Internet
-python agenten/agent.py --agent datenbank-analyst --modell mensch
+python agenten/llm_spielen.py                                        # bequem im Chat-Fenster
+python agenten/agent.py --agent datenbank-analyst --modell mensch    # oder im Terminal
 
 # 2) Mit Claude (API-Key von console.anthropic.com)
 $env:ANTHROPIC_API_KEY = "sk-ant-..."
@@ -56,6 +57,29 @@ Weitere Optionen:
 | `--weg-zeigen` | am Ende den Weg des Laufs als Diagramm im Browser öffnen |
 
 ## Selbst das LLM spielen (`--modell mensch`)
+
+### Im Chat-Fenster (empfohlen)
+
+```powershell
+python agenten/llm_spielen.py
+python agenten/llm_spielen.py --agent notenverwalter
+python agenten/llm_spielen.py --agent koordinator "Zwischenstand Informatik 10a"
+```
+
+Es gibt zwei Arten von Fenstern:
+
+| Fenster | Was du dort siehst bzw. tust |
+|---|---|
+| **Mensch & Harness** (Hauptfenster) | 👤 Auftrag eingeben, Rückfragen beantworten, Freigaben erteilen, Ergebnis lesen. Graue Zeilen zeigen, was der Harness gerade tut (lässt sich ausschalten). |
+| **🤖 *agent* – du bist das LLM** (eines pro Agent) | Genau das, was der Harness diesem Agenten zeigt: links der Verlauf (📨 Auftrag, 🔧 Tool-Ergebnisse, rechts deine Antworten), rechts **Das sieht das LLM** mit System-Prompt und Tools (ein Klick auf ein Tool fügt eine Vorlage ein). Unten gibst du deine Antwort als LLM ein. Darunter steht schon beim Tippen, wie der Harness sie verstehen wird. |
+
+**Mehrere Agenten:** Startest du z. B. als `koordinator` und delegierst an den `datenbank-analyst`, öffnet sich dessen Fenster und kommt nach vorn. Umschalten musst du nie, das macht der Harness. Gibt der Analyst seine Endantwort, kommt das Fenster des Koordinators wieder nach vorn, und die Antwort steht dort als Tool-Ergebnis. Die **Kette** oben im Fenster zeigt, wer wen beauftragt hat. Wird ein Agent ein zweites Mal beauftragt, wird sein Fenster geleert: neues Gedächtnis. So sieht man, dass der Harness für **jeden Agenten einen eigenen Kontext** baut.
+
+Der **gelbe Rahmen** zeigt, wo gerade eine Eingabe erwartet wird. Bei einer Rückfrage kommt das Hauptfenster nach vorn. Freigaben (z. B. bei `add_grade`) erscheinen als Ja/Nein-Fenster.
+Der Knopf **❓ Hilfe** erklärt ausführlich mit Beispielen, wie man als LLM handelt. Ein Klick auf ein Beispiel übernimmt es ins LLM-Feld.
+Im Terminal läuft das gewohnte Protokoll mit. Es ist derselbe Harness wie bei `agent.py`, nur das Gehirn (`FensterLLM`) und der Mensch (`FensterMensch`) sind ausgetauscht.
+
+### Im Terminal
 
 Mit `--modell mensch` bist **du** das Sprachmodell. Der Harness zeigt dir in einem Kasten genau das, was ein echtes LLM bekommen würde: System-Prompt, verfügbare Tools und neue Nachrichten. Danach wartet er bei `LLM>` auf deine Antwort.
 
@@ -154,6 +178,7 @@ Die HTML-Datei lädt nur das Zeichenprogramm mermaid.js aus dem Internet. Das Bi
 ```
 agenten/
 ├── agent.py               # Startprogramm (Kommandozeile)
+├── llm_spielen.py         # du spielst das LLM – in Chat-Fenstern, eines pro Agent (tkinter)
 ├── minimal_agent.py       # der kleinste mögliche Agent – zum Vergleichen
 ├── definitionen/          # S0: Hier wird festgelegt, was jeder Agent ist und darf
 │   ├── datenbank-analyst.md

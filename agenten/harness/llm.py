@@ -253,17 +253,52 @@ class MenschLLM:
             eingabe = input(f"{b}LLM> {r}").strip()
             if not eingabe:
                 continue
-            if eingabe.lower().startswith("tool "):
-                teile = eingabe[5:].strip().split(" ", 1)
-                name = teile[0]
-                try:
-                    argumente = json.loads(teile[1]) if len(teile) > 1 else {}
-                except json.JSONDecodeError as e:
-                    print(f"  Ungültiges JSON ({e}). Beispiel: tool describe_table {{\"table_name\": \"noten\"}}")
-                    continue
-                return {"text": "", "tool_calls": [{"id": f"call_{uuid.uuid4().hex[:8]}", "name": name,
-                                                    "arguments": argumente}], "verbrauch": {}}
-            return {"text": eingabe, "tool_calls": [], "verbrauch": {}}
+            zerlegt = zerlege_llm_eingabe(eingabe)
+            if zerlegt["art"] == "fehler":
+                print(f"  {zerlegt['meldung']} Beispiel: tool describe_table {{\"table_name\": \"noten\"}}")
+                continue
+            return als_llm_antwort(zerlegt)
+
+
+# ---------------------------------------------------------------------------
+# Wie wird das, was ein Mensch als "LLM" tippt, gelesen?
+# Diese Regel benutzen BEIDE Oberflächen: das Terminal (MenschLLM oben) und das
+# Chat-Fenster (agenten/llm_spielen.py). So gilt überall dasselbe.
+# ---------------------------------------------------------------------------
+def zerlege_llm_eingabe(eingabe: str) -> dict:
+    """Liest eine Eingabe und sagt, was sie ist.
+
+        "tool NAME {json}"   -> {"art": "tool", "name": NAME, "argumente": {...}}
+        anderer Text         -> {"art": "text", "text": ...}       (= Endantwort)
+        kaputtes JSON        -> {"art": "fehler", "meldung": ...}
+
+    Der Harness rät nicht: Nur die FORM entscheidet, ob es ein Tool-Aufruf ist.
+    """
+    eingabe = eingabe.strip()
+    if not eingabe.lower().startswith("tool "):
+        return {"art": "text", "text": eingabe}
+
+    # "tool" abschneiden, dann am ersten Leerzeichen/Zeilenumbruch trennen: NAME | JSON
+    teile = eingabe[5:].strip().split(maxsplit=1)
+    name = teile[0]
+    if len(teile) == 1:
+        return {"art": "tool", "name": name, "argumente": {}}
+    try:
+        argumente = json.loads(teile[1])
+    except json.JSONDecodeError as e:
+        return {"art": "fehler", "meldung": f"Ungültiges JSON ({e})."}
+    if not isinstance(argumente, dict):
+        return {"art": "fehler", "meldung": "Die Argumente müssen ein JSON-Objekt in {…} sein."}
+    return {"art": "tool", "name": name, "argumente": argumente}
+
+
+def als_llm_antwort(zerlegt: dict) -> dict:
+    """Macht aus dem Ergebnis von zerlege_llm_eingabe die Antwort im neutralen Format
+    (siehe oben: {"text", "tool_calls", "verbrauch"}) – genau wie bei Claude oder Ollama."""
+    if zerlegt["art"] == "tool":
+        aufruf = {"id": f"call_{uuid.uuid4().hex[:8]}", "name": zerlegt["name"], "arguments": zerlegt["argumente"]}
+        return {"text": "", "tool_calls": [aufruf], "verbrauch": {}}
+    return {"text": zerlegt["text"], "tool_calls": [], "verbrauch": {}}
 
 
 def erstelle_llm(art: str, modell: str | None = None, basis_url: str | None = None):
